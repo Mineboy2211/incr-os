@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="360" viewBox="0 0 900 360" role="img" aria-label="INCR.OS: an incremental game in a terminal">
+  <defs>
+    <!-- phosphor glow -->
+    <filter id="glow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="1.6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <!-- scanlines -->
+    <pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="2" fill="#000" opacity="0.28"/>
+    </pattern>
+    <radialGradient id="screen" cx="50%" cy="50%" r="75%">
+      <stop offset="0%" stop-color="#03130a"/>
+      <stop offset="100%" stop-color="#000"/>
+    </radialGradient>
+    <radialGradient id="vignette" cx="50%" cy="50%" r="70%">
+      <stop offset="60%" stop-color="#000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0.65"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="900" height="360" rx="10" fill="url(#screen)"/>
+  <rect x="0.5" y="0.5" width="899" height="359" rx="10" fill="none" stroke="#1c9a42"/>
+
+  <g font-family="'VT323', Consolas, 'Courier New', monospace" filter="url(#glow)" xml:space="preserve" style="white-space: pre">
+    <!-- logo -->
+    <g fill="#39ff6a" font-size="17">
+      <text x="28" y="40"> ___ _  _  ___ ___    ___  ___</text>
+      <text x="28" y="58">|_ _| \| |/ __| _ \  / _ \/ __|</text>
+      <text x="28" y="76"> | || .` | (__|   / | (_) \__ \</text>
+      <text x="28" y="94">|___|_|\_|\___|_|_\(_)___/|___/</text>
+    </g>
+
+    <!-- status, top right -->
+    <text x="872" y="48" text-anchor="end" font-size="30" fill="#39ff6a"><tspan fill="#1c9a42">BYTES</tspan> 4.21e15</text>
+    <text x="872" y="72" text-anchor="end" font-size="16" fill="#1c9a42">+3.20e14 B/s</text>
+    <text x="872" y="92" text-anchor="end" font-size="16" fill="#39ff6a">KRN 1,337  ·  CORES 7</text>
+
+    <line x1="28" y1="108" x2="872" y2="108" stroke="#1c9a42" stroke-dasharray="4 4"/>
+
+    <!-- session -->
+    <g font-size="16">
+      <text x="28" y="134" fill="#1c9a42">root@incr-7:~$ <tspan fill="#39ff6a">/buy daemon max</tspan></text>
+      <text x="28" y="156" fill="#39ff6a">bought 10 DAEMON (owned: 140).</text>
+      <text x="28" y="178" fill="#1c9a42">root@incr-7:~$ <tspan fill="#39ff6a">/daemon</tspan></text>
+      <text x="28" y="200" fill="#39ff6a">.-- 01 DAEMON (d) ----------------- [|]</text>
+      <text x="28" y="222" fill="#39ff6a">| owned   1.23e15      bought 140</text>
+      <text x="28" y="244" fill="#39ff6a">| mult    x16,384      [####......] 6 to x2.0</text>
+      <text x="28" y="266" fill="#39ff6a">| output  +3.20e14 bytes/s</text>
+      <text x="28" y="288" fill="#1c9a42">'-- /buy daemon [n|max]</text>
+      <text x="28" y="310" fill="#ffd34d">[13:37:00] new command unlocked: /reboot</text>
+      <text x="28" y="336" fill="#1c9a42">root@incr-7:~$ <tspan fill="#39ff6a">/reb</tspan><tspan fill="#39ff6a">█<animate attributeName="opacity" values="1;1;0;0" keyTimes="0;0.5;0.5;1" dur="1.1s" repeatCount="indefinite"/></tspan></text>
+    </g>
+  </g>
+
+
+  <rect width="900" height="360" rx="10" fill="url(#scan)" pointer-events="none"/>
+  <rect width="900" height="360" rx="10" fill="url(#vignette)" pointer-events="none"/>
+</svg>
