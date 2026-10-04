@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en" data-theme="green">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>INCR.OS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="crt" class="crt scan flicker">
+    <div id="boot" class="boot"></div>
+
+    <main id="app" class="app hidden">
+      <header class="top">
+        <pre class="logo"> ___ _  _  ___ ___    ___  ___
+|_ _| \| |/ __| _ \  / _ \/ __|
+ | || .` | (__|   / | (_) \__ \
+|___|_|\_|\___|_|_\(_)___/|___/</pre>
+        <div class="status">
+          <div class="big"><span class="dim">BYTES</span> <span id="points">10</span></div>
+          <div class="rate">+<span id="pps">0</span> B/s</div>
+          <div class="subcur" id="subcur"></div>
+        </div>
+      </header>
+
+      <div class="newswrap">
+        <div class="newsbar">
+          <button id="newsBtn" class="newsbtn" type="button" aria-expanded="false" aria-controls="newsPanel">NEWS</button>
+          <div id="news" class="news" aria-live="off"><span id="newsText"></span></div>
+        </div>
+        <div id="newsPanel" class="newspanel hidden" role="dialog" aria-label="News">
+          <div class="np-head">
+            <button type="button" class="npbtn" data-np="recent">RECENT</button>
+            <button type="button" class="npbtn" data-np="updates">UPDATES</button>
+            <span class="np-gap"></span>
+            <button type="button" class="npbtn" id="npTicker"></button>
+            <button type="button" class="npbtn" id="npClose" aria-label="Close news">X</button>
+          </div>
+          <div id="npBody" class="np-body"></div>
+        </div>
+      </div>
+
+      <section id="term" class="term">
+        <div id="log"></div>
+        <div id="objective" class="objective hidden"></div>
+        <div id="achMenu" class="menu hidden" role="dialog" aria-label="Achievements" tabindex="-1">
+          <div class="menu-head"><span id="amHead"></span><button type="button" class="npbtn" id="amClose" aria-label="Close achievements">X</button></div>
+          <div class="menu-tabs">
+            <button type="button" class="npbtn" data-amf="all">ALL</button>
+            <button type="button" class="npbtn" data-amf="unlocked">UNLOCKED</button>
+            <button type="button" class="npbtn" data-amf="locked">LOCKED</button>
+          </div>
+          <div id="amGrid" class="am-grid"></div>
+          <div id="amDetail" class="am-detail"></div>
+          <div class="menu-foot">arrows move · Tab filter · Esc close</div>
+        </div>
+        <label class="prompt"><span>root@incr:~$</span><input id="cmd" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" placeholder="type /help" aria-label="command"></label>
+        <div id="keys" class="keys hidden" aria-label="touch keys">
+          <button type="button" data-key="tab">TAB</button>
+          <button type="button" data-key="up">UP</button>
+          <button type="button" data-key="down">DOWN</button>
+          <button type="button" data-key="help">/help</button>
+          <button type="button" data-key="max">/max</button>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="big.js"></script>
+  <script src="skins.js"></script>
+  <script src="news.js"></script>
+  <script src="filesystem.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
