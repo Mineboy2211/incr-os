@@ -75,19 +75,6 @@ root@incr-7:~$ /sys             # phosphor color, scanlines, flicker, notation..
 ```
 
 Green, amber, cyan or white phosphor. The **NEWS** button (top left) has the changelog.
-
-## `> run it yourself`
-
-No build step: plain HTML, CSS and JavaScript. Download the files and open
-`index.html`, or serve the folder with any static web server.
-
-```text
-index.html     the page
-style.css      the CRT look
-game.js        the game
-big.js         numbers past 1.79e308
-news.js        news ticker + changelog
-filesystem.js  the virtual file system
 skins.js       process skins
 ```
 
