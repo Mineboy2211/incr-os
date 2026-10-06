@@ -17,6 +17,7 @@ const UPDATES = [
     'already rebooted before this update? the game asks before installing it. said no? /upgrade',
     '/reboot, /format, challenges and /sys reset now ask once: answer /yes or /no within 10s.',
     'events show up as a pop-up with a button on the desktop.',
+    'fix: persistent-etc now gives back the autobuyers your last FORMAT wiped, as soon as you flash it.',
   ] },
   { v: 'v0.4', notes: [
     'the door: numbers now go past 1.79e308. reach it to unlock /patches. new goal: 1e1000.',

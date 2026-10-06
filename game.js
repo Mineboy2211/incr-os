@@ -41,7 +41,7 @@ const K_UPGRADES = [
   { id: 'ten2',      key: 'vectorize',    cost: 2000, desc: 'Per-10 bonus +0.3 more.' },
 ];
 const C_UPGRADES = [
-  { id: 'keep',       key: 'persistent-etc',    cost: 1,   desc: 'Keep autobuyer, alias and bash modules on FORMAT.' },
+  { id: 'keep',       key: 'persistent-etc',    cost: 1,   desc: 'Keep autobuyer, alias and bash modules on FORMAT. Flashing it gives back the ones your last FORMAT wiped.' },
   { id: 'autoReboot', key: 'watchdog',          cost: 2,   desc: 'Auto-REBOOT. Unlocks /watchdog and /auto reboot.' },
   { id: 'startK',     key: 'bootloader',        cost: 4,   desc: 'Start each FORMAT with 100 kernels.' },
   { id: 'ten',        key: 'simd',              cost: 10,  desc: 'Per-10 bonus +0.5.' },
@@ -60,6 +60,8 @@ const PATCHES = [
   { id: 'door',   key: 'the-door',    costL: GOAL_L, desc: 'Open it.' },
 ];
 for (const u of [...K_UPGRADES, ...C_UPGRADES, ...PATCHES]) u.name = u.key.toUpperCase();
+// kernel modules that persistent-etc keeps through a FORMAT
+const KEEP_IDS = ['auto1', 'auto2', 'autoClock', 'alias', 'bash'];
 const K_BY_ID = Object.fromEntries(K_UPGRADES.map(u => [u.id, u]));
 const C_BY_ID = Object.fromEntries(C_UPGRADES.map(u => [u.id, u]));
 const P_BY_ID = Object.fromEntries(PATCHES.map(u => [u.id, u]));
@@ -136,6 +138,7 @@ function newState() {
     auto: m.auto,
     cores: 0, coresEarned: 0, cUpg: {},
     patches: {},
+    wipedKeep: [], // modules the last FORMAT wiped (persistent-etc gives them back)
     ach: {},
     cmds: {}, // commands already announced as unlocked
     aliases: {},
@@ -392,6 +395,13 @@ function buyC(id) {
   if (!u || hasC(id) || S.cores < u.cost) return;
   S.cores -= u.cost; S.cUpg[id] = true;
   log(`installed core firmware: ${u.name}`, 'ok');
+  // persistent-etc can only be bought after a FORMAT, which already wiped the
+  // modules it protects: give those back so it works right away
+  if (id === 'keep' && S.wipedKeep.length) {
+    for (const k of S.wipedKeep) S.kUpg[k] = true;
+    log(`restored from /etc: ${S.wipedKeep.map(k => K_BY_ID[k].name).join(', ')}`, 'ok');
+    S.wipedKeep = [];
+  }
 }
 function buyP(id) {
   const u = P_BY_ID[id];
@@ -438,7 +448,9 @@ function doFormat() {
   S.coresEarned = clampN(S.coresEarned + gain);
   S.stats.formats++;
   const kept = {};
-  if (hasC('keep')) for (const id of ['auto1', 'auto2', 'autoClock', 'alias', 'bash']) if (S.kUpg[id]) kept[id] = true;
+  const keepable = KEEP_IDS.filter(id => S.kUpg[id]);
+  if (hasC('keep')) for (const id of keepable) kept[id] = true;
+  else S.wipedKeep = keepable; // persistent-etc gives these back when flashed
   S.kUpg = kept;
   S.kGainLvl = 0;
   S.kernels = hasC('startK') ? 100 : 0;
@@ -1766,6 +1778,7 @@ function sanitize(raw) {
   s.v = SAVE_VERSION;
   s.lastTick = num(s.lastTick, Date.now());
   if (!Array.isArray(s.scripts)) s.scripts = [];
+  s.wipedKeep = Array.isArray(s.wipedKeep) ? s.wipedKeep.filter(id => KEEP_IDS.includes(id)) : [];
   if (!CHAL_BY_ID[s.chal.active]) s.chal.active = null;
   if (!SKINS[s.skin]) s.skin = 'default';
   if (!s.rename || typeof s.rename !== 'object') s.rename = {};
