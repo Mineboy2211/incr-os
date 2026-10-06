@@ -10,6 +10,11 @@
  *   bbs       "Late Night BBS": slow lo-fi chords, soft drums, crackle
  *   dial      "Handshake": fast chiptune arpeggios
  *   saver     "Flying Daemons": ambient pads and slow bells
+ *   INCR.OS 5.0's CD Player adds:
+ *   os5       "Start Button": bright synth stabs over a drum machine
+ *   web       "Hit Counter": fast breakbeat with a wobbly bass
+ *   pipes     "3D Pipes": slow, floating arpeggios
+ *   outbreak  "Outbreak": tense minor pulse (plays while worm.exe spreads)
  *
  * Notes are scheduled a little ahead of time by a small sequencer (16th-note
  * steps). Browsers only allow sound after a click or key press, so nothing is
@@ -287,9 +292,80 @@ const Music = (() => {
       }
     },
   };
+  // ---- INCR.OS 5.0's CD Player
+  TRACKS.os5 = {
+    bpm: 120,
+    chords: [[60, 64, 67, 71], [57, 60, 64, 67], [53, 57, 60, 64], [55, 59, 62, 65]], // Cmaj7 Am7 Fmaj7 G7
+    play(s, t, sp) {
+      const bar = Math.floor(s / 16), pos = s % 16;
+      const chord = this.chords[bar % 4];
+      // synth stabs on the offbeats
+      if (pos === 2 || pos === 6 || pos === 11 || pos === 14) {
+        for (const m of chord) tone({ type: 'sawtooth', midi: m + 12, t, dur: sp * 1.2, gain: 0.012, cutoff: 2200, release: 0.08 });
+      }
+      if (pos % 4 === 0 || pos === 7) tone({ type: 'square', midi: chord[0] - 24, t, dur: sp * 1.5, gain: 0.05, cutoff: 600 });
+      if (pos % 4 === 0) kick(t, 0.3);
+      if (pos === 4 || pos === 12) hiss({ t, dur: 0.12, gain: 0.07, type: 'bandpass', f: 1900, q: 0.7 });
+      if (pos % 2 === 1) hiss({ t, dur: 0.03, gain: 0.014, f: 8000 });
+      // a hook every other bar
+      const hook = [79, null, 76, null, 74, 76, null, 72, null, null, 74, null, 76, null, null, null];
+      if (bar % 2 === 1 && hook[pos]) tone({ type: 'square', midi: hook[pos], t, dur: sp * 1.6, gain: 0.025, cutoff: 3200, send: 0.3 });
+    },
+  };
+  TRACKS.web = {
+    bpm: 168,
+    chords: [[57, 60, 64], [53, 57, 60], [55, 59, 62], [52, 55, 59]], // Am F G Em
+    play(s, t, sp) {
+      const bar = Math.floor(s / 16), pos = s % 16;
+      const chord = this.chords[Math.floor(bar / 2) % 4];
+      // the classic chopped break: kick, snare, ghost notes
+      if (pos === 0 || pos === 10) kick(t, 0.32);
+      if (pos === 4 || pos === 12) hiss({ t, dur: 0.1, gain: 0.08, type: 'bandpass', f: 1700, q: 0.8 });
+      if (pos === 7 || pos === 15) hiss({ t, dur: 0.05, gain: 0.03, type: 'bandpass', f: 2200, q: 0.8 });
+      hiss({ t, dur: 0.02, gain: pos % 2 ? 0.008 : 0.016, f: 9000 });
+      // wobbly bass: two detuned saws, low-passed
+      if (pos === 0 || pos === 6 || pos === 8) {
+        tone({ type: 'sawtooth', midi: chord[0] - 24, t, dur: sp * 5, gain: 0.04, cutoff: 380, detune: -12 });
+        tone({ type: 'sawtooth', midi: chord[0] - 24, t, dur: sp * 5, gain: 0.04, cutoff: 380, detune: 12 });
+      }
+      if (pos === 0 && bar % 2 === 0) for (const m of chord) tone({ type: 'triangle', midi: m + 12, t, dur: sp * 32, gain: 0.012, attack: 0.6, release: 1 });
+    },
+  };
+  TRACKS.pipes = {
+    bpm: 80,
+    chords: [[53, 57, 60, 64, 67], [55, 59, 62, 66, 69], [52, 55, 59, 62, 66], [57, 61, 64, 67, 71]], // Lydian-ish
+    play(s, t, sp) {
+      const bar = Math.floor(s / 16), pos = s % 16;
+      const chord = this.chords[Math.floor(bar / 2) % 4];
+      if (pos === 0 && bar % 2 === 0) {
+        for (const m of chord) tone({ type: 'sine', midi: m, t, dur: sp * 32, gain: 0.02, attack: 1.2, release: 1.6 });
+        tone({ type: 'sine', midi: chord[0] - 12, t, dur: sp * 32, gain: 0.07, attack: 1, release: 1.6 });
+      }
+      if (pos % 2 === 0) {
+        const k = [0, 2, 4, 3, 1, 4, 2, 3][(pos / 2 + bar) % 8];
+        tone({ type: 'triangle', midi: chord[k] + 12, t, dur: sp * 1.8, gain: 0.025, release: 0.2, send: 0.5 });
+      }
+    },
+  };
+  TRACKS.outbreak = {
+    bpm: 140,
+    chords: [[57, 60, 64], [57, 60, 65], [56, 59, 64], [57, 60, 64]], // Am, a bit off
+    play(s, t, sp) {
+      const bar = Math.floor(s / 16), pos = s % 16;
+      const chord = this.chords[bar % 4];
+      if (pos % 2 === 0) tone({ type: 'sawtooth', midi: chord[0] - 24, t, dur: sp * 0.9, gain: 0.05, cutoff: 500 });
+      if (pos % 4 === 0) kick(t, 0.3);
+      if (pos === 4 || pos === 12) hiss({ t, dur: 0.09, gain: 0.07, type: 'bandpass', f: 2000, q: 1 });
+      hiss({ t, dur: 0.02, gain: 0.01, f: 9000 });
+      if ([0, 3, 6, 10, 13].includes(pos)) tone({ type: 'square', midi: chord[(pos + bar) % 3] + 12, t, dur: sp * 0.6, gain: 0.02, cutoff: 1800 });
+      // the alarm: two high notes, every 4 bars
+      if (bar % 4 === 3 && (pos === 0 || pos === 8)) tone({ type: 'square', midi: pos ? 81 : 84, t, dur: sp * 7, gain: 0.02, cutoff: 3000, send: 0.4 });
+    },
+  };
   const TITLES = {
     terminal: 'Phosphor', win1: 'Graphical Environment', os3: 'Overlapping Windows',
     os4: 'Program Manager', bbs: 'Late Night BBS', dial: 'Handshake', saver: 'Flying Daemons',
+    os5: 'Start Button', web: 'Hit Counter', pipes: '3D Pipes', outbreak: 'Outbreak',
   };
 
   // ---------------------------------------------------------------- sequencer
@@ -474,6 +550,13 @@ const Music = (() => {
         const w = hz(1800, t + 2.3, 0.5, 0.02, 'sawtooth');
         w.frequency.setValueAtTime(1800, t + 2.3);
         w.frequency.linearRampToValueAtTime(900, t + 2.8);
+      } else if (name === 'start5') { // the startup sound: a rising run into a big, shimmering chord
+        [60, 64, 67, 71, 74, 79].forEach((m, i) => tone({ type: 'triangle', midi: m, t: t + i * 0.09, dur: 0.5, gain: 0.04 * g, release: 0.3, dest: out }));
+        for (const m of [48, 55, 64, 67, 71, 74, 79]) {
+          tone({ type: 'sine', midi: m, t: t + 0.6, dur: 3.2, gain: 0.03 * g, attack: 0.4, release: 2, dest: out });
+          tone({ type: 'sawtooth', midi: m, t: t + 0.6, dur: 3, gain: 0.006 * g, attack: 0.8, release: 2, cutoff: 1500, detune: 8, dest: out });
+        }
+        tone({ type: 'sine', midi: 91, t: t + 0.9, dur: 2.2, gain: 0.012 * g, attack: 0.3, release: 1.6, dest: out });
       } else if (name === 'save') {
         [67, 72, 76, 79].forEach((m, i) => tone({ type: 'sine', midi: m + 12, t: t + i * 0.07, dur: 0.35, gain: 0.05 * g, release: 0.25, dest: out }));
       } else if (name === 'voice' || name === 'voice-sys') { // typewriter blips for the dialogue

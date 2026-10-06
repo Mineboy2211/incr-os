@@ -209,7 +209,7 @@ function os4Clean(o) {
   o.on = o.unlocked && o.on !== false;
   return o;
 }
-const os4On = () => !!(S.os4 && S.os4.unlocked && S.os4.on);
+const os4On = () => !!(S.os4 && S.os4.unlocked && S.os4.on) && !os5Live();
 
 // ---------------------------------------------------------------- formulas
 const PROG_BY_ID = Object.fromEntries(PROGS.map((p, i) => [p.id, i]));
@@ -250,8 +250,8 @@ function os4Step(dt) {
   if (!S.os4.unlocked) return;
   addSig(sigRate() * dt);
   if (saverOn) S.os4.saverTime += dt;
-  if (!os4On()) return;
-  // over here, pixels run themselves too
+  if (!os4On() && !os5Live()) return;
+  // over here (and in 5.0), pixels run themselves too
   os4AutoAcc += dt;
   if (os4AutoAcc >= 1) {
     os4AutoAcc = 0;
@@ -668,7 +668,8 @@ const ICON4 = {
 function win4Body(id) {
   switch (id) {
     case 'pm': return PM_GROUPS.map(([name, ids]) => `<fieldset class="pm-group"><legend>${name}</legend>${ids.map(w =>
-      `<button type="button" class="pm-icon" data-o4="open:${w}">${ICON4[w]}<span>${WIN4[w].label}</span></button>`).join('')}</fieldset>`).join('');
+      `<button type="button" class="pm-icon" data-o4="open:${w}">${ICON4[w]}<span>${WIN4[w].label}</span></button>`).join('')}</fieldset>`).join('') +
+      '<fieldset class="pm-group hidden" id="o4Setup5Group"><legend>Setup</legend><button type="button" class="pm-icon" data-o4="setup5"><i class="i4 i-setup5">5.0</i><span>START 5.0</span></button></fieldset>';
     case 'term': return `<div id="o4Phone"></div>
       <p class="row"><span class="meter"><i data-xw="dial"></i></span> <span class="dim" data-x="dialinfo"></span></p>
       <div class="btnrow"><button type="button" class="gbtn big" data-o4="dial" data-xd="dial">Dial</button></div>
@@ -718,6 +719,7 @@ function os4Build() {
         <span class="o4-stat o4-ram"><span class="dim">RAM</span> <span data-x="ram"></span></span>
       </div>
       <div class="o4-btns">
+        <button type="button" class="gbtn hidden" data-o4="os5back" id="o4Back5">INCR.OS 5.0</button>
         <button type="button" class="gbtn" data-o4="open:pm">Programs</button>
         <button type="button" class="gbtn" data-o4="ach">Achievements</button>
         <button type="button" class="gbtn" data-o4="music" id="o4Music" aria-label="Music on/off">&#9835;</button>
@@ -738,7 +740,14 @@ function os4Build() {
         <button type="submit" class="gbtn">OK</button></form>
       <div class="dlg-next" id="o4Next">click to continue &#9660;</div>
     </div>
-    <canvas id="o4Saver" class="o4-saver hidden" aria-hidden="true"></canvas>`;
+    <canvas id="o4Saver" class="o4-saver hidden" aria-hidden="true"></canvas>
+    <div id="o4Setup5" class="o4-setup hidden" role="dialog" aria-label="INCR.OS 5.0">
+      <div class="w4-title"><span class="w4-name">INCR.OS 5.0</span></div>
+      <div class="w4-body"><p>Your line is ready to go online.</p>
+        <p class="dim">INCR.OS 5.0 is ready to start. Signal, pixels and bytes keep running on their own.</p>
+        <div class="btnrow"><button type="button" class="gbtn big" data-o4="setup5">Start</button>
+        <button type="button" class="gbtn" data-o4="setup5later">Later</button></div></div>
+    </div>`;
   solNew(); revNew(); avNew();
   for (const id of Object.keys(MINI4)) mini4Draw(id);
   o4Bind();
@@ -833,7 +842,7 @@ function os4Render() {
     $('os4').classList.toggle('hidden', !on);
     document.body.classList.toggle('os4-mode', on);
     if (on) { os4Build(); o4Layout(); }
-    else if (!introRunning && !os3On()) $('app').classList.remove('hidden');
+    else if (!introRunning && !os3On() && !os5Live() && !(has5() && setup5Running)) $('app').classList.remove('hidden');
     if (!on) stopSaver();
   }
   if (!on) return;
@@ -841,6 +850,11 @@ function os4Render() {
   o4Refresh();
   $('o4Music').classList.toggle('off', !S.opts.music);
   saverCheck();
+  // after the last chapter: INCR.OS 5.0 is ready
+  const ready5 = has5() && setup5Ready();
+  $('o4Setup5Group').classList.toggle('hidden', !ready5);
+  $('o4Setup5').classList.toggle('hidden', !ready5 || !!dlg4 || setup5Asked || setup5Running);
+  $('o4Back5').classList.toggle('hidden', !(has5() && S.os5.unlocked));
   const c = S.os4.chapter;
   if (!dlg4 && ((c < CHAPTERS4.length - 1 && c <= S.os4.conns) || (c === CHAPTERS4.length - 1 && S.os4.line))) startChapter4(c);
 }
@@ -999,10 +1013,14 @@ function os4Act(act) {
     case 'av': avClick(i); mini4Draw('av'); break;
     case 'avstart': avStart(); mini4Draw('av'); break;
     case 'visit': os4Visit(a); break;
+    case 'setup5': if (has5()) playSetup5(); break;
+    case 'setup5later': setup5Asked = true; break;
+    case 'os5back': if (has5()) os5Return(); break;
     case 'ach': openAchMenu(); break;
   }
   os4Render();
 }
+let setup5Asked = false; // said "Later" to INCR.OS 5.0 this session
 function os4Visit(era) {
   S.os4.on = false;
   closeDialogue4();

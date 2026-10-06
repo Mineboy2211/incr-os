@@ -22,7 +22,7 @@ let guiBound = [];      // [element, kind, key, arg]
 let fmConfirmUntil = 0; // the Format button asks before wiping
 let guiWasOn = null;
 
-const guiOn = () => !!(S.gui && S.gui.on && S.gui.win1) && !os3On() && !os4Live();
+const guiOn = () => !!(S.gui && S.gui.on && S.gui.win1) && !os3On() && !os4Live() && !os5Live();
 const guiNarrow = () => !!(window.matchMedia && matchMedia('(max-width: 999px), (orientation: portrait)').matches);
 const pct = f => `${(Math.max(0, Math.min(1, f)) * 100).toFixed(1)}%`;
 
@@ -187,7 +187,8 @@ function renderGui(force) {
   for (let i = 0; i < TIERS; i++) $(`prow${i}`).classList.toggle('hidden', !tierUnlocked(i));
   setText($('achMenuItem'), `Achievements (${achCount()}/${ACH.length})!`);
   $('os3Back').classList.toggle('hidden', !S.os3.unlocked);
-  $('os4Back').classList.toggle('hidden', !S.os4.unlocked);
+  $('os4Back').classList.toggle('hidden', !(has4() && S.os4.unlocked));
+  $('os5Back').classList.toggle('hidden', !(has5() && S.os5.unlocked));
   setText($('termTitle'), `Terminal - ${S.machine.toUpperCase()}`);
   refreshBound();
 
@@ -244,6 +245,7 @@ function guiAct(act) {
     case 'news': openNews('recent'); break;
     case 'os3back': os3Return(); break;
     case 'os4back': if (has4()) os4Return(); break;
+    case 'os5back': if (has5()) os5Return(); break;
     case 'enter': playDoorIntro(); break;
     case 'help': setGuiTab('term'); runCommand('/help'); break;
     case 'tab': setGuiTab(a); break;

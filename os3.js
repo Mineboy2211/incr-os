@@ -211,7 +211,9 @@ function os3Clean(o) {
 const has4 = () => typeof os4On === 'function' && !!S.os4;
 const os4Live = () => has4() && os4On();
 const setup4Busy = () => has4() && setupRunning;
-const os3On = () => !!(S.os3 && S.os3.unlocked && S.os3.on) && !os4Live();
+const has5 = () => typeof os5On === 'function' && !!S.os5;
+const os5Live = () => has5() && os5On();
+const os3On = () => !!(S.os3 && S.os3.unlocked && S.os3.on) && !os4Live() && !os5Live();
 
 // ---------------------------------------------------------------- formulas
 const ownColor = i => !!S.os3.colors[i];
@@ -253,7 +255,7 @@ function os3Step(dt) {
   if (!S.os3.unlocked) return;
   addPx(pxRate() * dt);
   // over here the bytes run themselves
-  if (os3On() || os4Live()) {
+  if (os3On() || os4Live() || os5Live()) {
     os3AutoAcc += dt;
     if (os3AutoAcc >= 1) { os3AutoAcc = 0; maxAll(); }
   }
@@ -582,6 +584,7 @@ function os3Build() {
       </div>
       <div class="o3-btns">
         <button type="button" class="gbtn hidden" data-o3="os4back" id="o3Back4">INCR.OS 4.0</button>
+        <button type="button" class="gbtn hidden" data-o3="os5back" id="o3Back5">INCR.OS 5.0</button>
         <button type="button" class="gbtn" data-o3="ach">Achievements</button>
         <button type="button" class="gbtn" data-o3="music" id="o3Music" aria-label="Music on/off">&#9835;</button>
       </div>
@@ -697,7 +700,7 @@ function os3Render() {
     $('os3').classList.toggle('hidden', !on);
     document.body.classList.toggle('os3-mode', on);
     if (on) { os3Build(); os3Layout(); }
-    else if (!introRunning && !os4Live() && !setup4Busy()) $('app').classList.remove('hidden');
+    else if (!introRunning && !os4Live() && !os5Live() && !setup4Busy()) $('app').classList.remove('hidden');
   }
   if (!on) return;
   os3Lists();
@@ -710,6 +713,7 @@ function os3Render() {
   if (!dlg && S.os3.chapter <= S.os3.pics && S.os3.chapter < CHAPTERS.length) startChapter(S.os3.chapter);
   // after the last memory: INCR.OS 4.0 setup
   $('o3Back4').classList.toggle('hidden', !(has4() && S.os4.unlocked));
+  $('o3Back5').classList.toggle('hidden', !(has5() && S.os5.unlocked));
   const ready = has4() && setupReady();
   $('o3SetupBtn').classList.toggle('hidden', !ready);
   $('o3SetupIcon').classList.toggle('hidden', !ready); // always on the desktop, even after "Later"
@@ -749,7 +753,8 @@ function os3Act(act) {
     case 'visit': os3Visit(a); break;
     case 'setup': if (has4()) playSetup(); break;
     case 'setuplater': setupAsked = true; break;
-    case 'os4back': if (has4()) os4Return(); break;
+    case 'os4back': if (has4()) { S.os5 && (S.os5.on = false); os4Return(); } break;
+    case 'os5back': if (has5()) os5Return(); break;
     case 'ach': openAchMenu(); break;
     case 'music': $('musicBtn').click(); break;
   }

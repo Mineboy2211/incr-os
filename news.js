@@ -7,10 +7,18 @@
  * To ship a version: add an entry at the TOP of UPDATES and bump VERSION.
  */
 
-const VERSION = 'v0.8';
+const VERSION = 'v0.9';
 
 // newest first
 const UPDATES = [
+  { v: 'v0.9', notes: [
+    'INCR.OS 5.0: answer the question in 4.0 and the voice goes online. new resource: hits.',
+    'build a homepage with your line at the top. more blocks, more visitors, but a heavy page makes them leave.',
+    'a webring of six sites, and the end of the story so far. watch your inbox.',
+    'the Recycle Bin: throw the page away for awards that stay forever.',
+    'Pinball, Defend the Inbox, a pet daemon on the taskbar, the 3D Pipes screensaver, and a CD Player with 11 tracks.',
+    '8 new achievements.',
+  ] },
   { v: 'v0.8', notes: [
     'INCR.OS 4.0: save the last picture in 3.0 and the voice rewrites itself. new resource: signal.',
     'a modem to dial out, six numbers to call, and the end of the story so far.',
@@ -132,6 +140,9 @@ const NEWS = [
   { cat: 'news', when: () => S.os3.unlocked, text: 'local process takes up painting. critics call it "derivative of 1987".' },
   { cat: 'news', when: () => S.os4.unlocked, text: 'phone bill for incr-7 reaches record high. nobody remembers making the calls.' },
   { cat: 'news', when: () => S.os4.conns >= 4, text: 'thousands of machines report the same thing: "mine asked me a question."' },
+  { cat: 'news', when: () => S.os5.unlocked, text: 'new homepage spotted: "under construction" since 1995. visitors say it is "kind of sweet".' },
+  { cat: 'news', when: () => wormOn(), text: 'BREAKING: do not open emails titled ILOVEYOU. experts "cannot stress this enough".' },
+  { cat: 'news', when: () => S.os5.links >= LINKS.length, text: 'thousands of machines quarantine a worm together. nobody planned it.' },
   { cat: 'news', when: () => S.os3.unlocked && !S.os3.on, text: 'tourist from INCR.OS 3.0 spotted in the old eras. "just visiting," they insist.' },
   { cat: 'news', when: () => S.machine !== 'incr-7', text: () => `user spotted logged into ${S.machine}. incr-7 "feels a bit lonely".` },
   { cat: 'news', when: () => S.skin !== 'default', text: () => `fashion report: processes now dress as ${S.skin}. critics divided.` },
