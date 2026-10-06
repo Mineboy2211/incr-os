@@ -195,8 +195,18 @@ const Music = (() => {
   return {
     // call from a click / key press: browsers block audio until then
     unlock() {
+      if (ctx && ctx.state === 'running' && timer) return; // already playing
+      // iPhone: count as media playback, so the ring/silent switch doesn't mute it (Safari 17+)
+      try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* not supported */ }
       if (!ctx && !build()) return;
-      if (ctx.state === 'suspended' && !document.hidden) ctx.resume();
+      if (ctx.state !== 'running' && !document.hidden) {
+        ctx.resume();
+        // mobile browsers fully unlock audio when a sound starts during the tap itself
+        const blip = ctx.createBufferSource();
+        blip.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+        blip.connect(ctx.destination);
+        blip.start(0);
+      }
       if (!timer) timer = setInterval(tick, 40);
       if (wanted) useTrack(wanted);
       applyGain();

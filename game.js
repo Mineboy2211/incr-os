@@ -2116,9 +2116,12 @@ function init() {
   wireNews();
   wireAchMenu();
   wireGui();
+  // Browsers only start audio from a "real" gesture. On touch screens that's the
+  // finger lifting (touchend / pointerup / click), not touching down.
   const unlockAudio = () => Music.unlock();
-  window.addEventListener('pointerdown', unlockAudio);
-  window.addEventListener('keydown', unlockAudio);
+  for (const type of ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown']) {
+    window.addEventListener(type, unlockAudio, { passive: true });
+  }
   $('musicBtn').addEventListener('click', () => {
     S.opts.music = !S.opts.music;
     if (S.opts.music && S.opts.volume === 0) S.opts.volume = 40;
