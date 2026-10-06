@@ -58,7 +58,7 @@
         </section>
         <section class="win" id="winSys" aria-label="System">
           <div class="win-title"><span class="w-sys" aria-hidden="true"></span><span class="w-name">System</span><span class="w-ctl" aria-hidden="true"><i>&#9660;</i><i>&#9650;</i></span></div>
-          <div class="win-menu"><button type="button" data-act="ach" id="achMenuItem">Achievements!</button><button type="button" data-act="news">News!</button></div>
+          <div class="win-menu"><button type="button" data-act="ach" id="achMenuItem">Achievements!</button><button type="button" data-act="news">News!</button><button type="button" data-act="os3back" id="os3Back" class="hidden">INCR.OS 3.0!</button></div>
           <div class="win-body" id="sysBody"></div>
         </section>
       </div>
@@ -107,6 +107,32 @@
       <div class="splash-copy">Copyright (c) Incremental Systems Corp., 1987.</div>
     </div>
 
+    <!-- asks players who opened the door before v0.7 to step through -->
+    <div id="doorAsk" class="doorask hidden" role="dialog" aria-modal="true" aria-labelledby="daTitle">
+      <div class="da-box">
+        <div class="da-door" aria-hidden="true"><i></i></div>
+        <div class="da-text">
+          <p class="da-title" id="daTitle">THE DOOR IS OPEN</p>
+          <p>You opened it before this update. Now there is something on the other side: <b>INCR.OS 3.0</b>.</p>
+          <p class="da-dim">Your old progress stays exactly as it is, and you can come back to it anytime.</p>
+          <div class="da-btns">
+            <button type="button" id="doorGo" data-door="go">Step through</button>
+            <button type="button" data-door="later">Not now</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INCR.OS 3.0 (behind the door): built by os3.js -->
+    <div id="os3" class="os3 hidden"></div>
+    <canvas id="doorFx" class="doorfx hidden" aria-hidden="true"></canvas>
+    <div id="splash3" class="splash3 hidden" aria-hidden="true">
+      <div class="s3-logo"><i></i><i></i><i></i></div>
+      <div class="s3-name">INCR.OS</div>
+      <div class="s3-ver">Version 3.0</div>
+      <div class="s3-copy">Copyright (c) Incremental Systems Corp., 1988. All rights reserved.</div>
+    </div>
+
     <!-- event message box (graphical mode) -->
     <div id="toast" class="toast hidden" role="status">
       <span id="toastText"></span>
@@ -119,6 +145,7 @@
   <script src="filesystem.js"></script>
   <script src="music.js"></script>
   <script src="gui.js"></script>
+  <script src="os3.js"></script>
   <script src="game.js"></script>
 </body>
 </html>

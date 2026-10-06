@@ -7,10 +7,18 @@
  * To ship a version: add an entry at the TOP of UPDATES and bump VERSION.
  */
 
-const VERSION = 'v0.6';
+const VERSION = 'v0.7';
 
 // newest first
 const UPDATES = [
+  { v: 'v0.7', notes: [
+    'the door opens. apply the-door patch and walk through it: INCR.OS 3.0 is on the other side.',
+    'a new resource, pixels: paint the canvas, buy tools and colors, save pictures to remember what happened.',
+    'three minigames for pixels: Sectors, Defrag and Memory.',
+    'the MS-DOS Prompt takes you back to INCR.OS 1.0 and 2.0, progress kept, to finish their achievements. /win3 brings you back.',
+    'opened the door before this update? a message asks you to step through when the game loads. said not now? the System window has a button, or type /enter',
+    '7 new achievements.',
+  ] },
   { v: 'v0.6', notes: [
     'music! each era has its own track, synthesized live: "Phosphor" for the terminal, "Graphical Environment" for INCR.OS 2.0.',
     'the note button next to NEWS turns it on or off. /sys volume 0-100 sets how loud.',
@@ -112,6 +120,8 @@ const NEWS = [
   { cat: 'news', when: () => S.scripts.length > 0, text: 'scripts now run this machine. admin considers early retirement.' },
   { cat: 'news', when: () => S.stats.overflowed && !S.won, text: 'SYSTEM OVERFLOW confirmed, yet the counter keeps going. physicists "have questions".' },
   { cat: 'news', when: () => S.won, text: 'someone went through the door. they left the light on.' },
+  { cat: 'news', when: () => S.os3.unlocked, text: 'local process takes up painting. critics call it "derivative of 1987".' },
+  { cat: 'news', when: () => S.os3.unlocked && !S.os3.on, text: 'tourist from INCR.OS 3.0 spotted in the old eras. "just visiting," they insist.' },
   { cat: 'news', when: () => S.machine !== 'incr-7', text: () => `user spotted logged into ${S.machine}. incr-7 "feels a bit lonely".` },
   { cat: 'news', when: () => S.skin !== 'default', text: () => `fashion report: processes now dress as ${S.skin}. critics divided.` },
   { cat: 'news', when: () => !!S.chal.done['kernel-panic'], text: 'local user beats kernel-panic. the machine now calls them ROOT.' },

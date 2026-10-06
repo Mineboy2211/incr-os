@@ -572,3 +572,287 @@ body.gui-mode .crt.flash .app { animation: flash-invert 0.3s steps(2); }
   .crt.glitch .app, .crt.crt-off .app, .crt.flash .app, .splash,
   body.gui-opening .win, body.gui-opening .term, .rbbtn:not(:disabled), .toast { animation: none !important; }
 }
+
+/* =====================================================================
+   INCR.OS 3.0 (behind the door)
+   Late-80s desktop: VGA colors, overlapping windows you can drag, program
+   icons along the bottom of a teal desktop, buttons with a bit of depth.
+   ===================================================================== */
+body.os3-mode {
+  --ega-blue: #0000aa;
+  --ega-gray: #aaaaaa;
+  --ega-dgray: #555555;
+  font-family: "Pixelify Sans", "MS Sans Serif", Tahoma, Arial, sans-serif;
+  font-size: 0.82em;
+  color: #000;
+}
+body.os3-mode .crt { background: #000; text-shadow: none; animation: none; }
+body.os3-mode .crt::before, body.os3-mode .crt::after { display: none; }
+.os3 {
+  position: fixed; inset: 0; z-index: 35;
+  display: flex; flex-direction: column;
+  background: repeating-conic-gradient(#008080 0 25%, #007575 0 50%) 0 0 / 4px 4px;
+  color: #000;
+}
+.os3 .dim { color: #555; }
+
+/* menu bar along the top */
+.o3-bar {
+  display: flex; align-items: center; gap: 4px 16px; flex-wrap: wrap;
+  background: #fff; border-bottom: 2px solid #000;
+  padding: 4px 10px;
+}
+.o3-logo { color: #0000aa; font-size: 1.15em; }
+.o3-stat b { font-size: 1.1em; }
+.o3-gap { flex: 1; }
+
+/* buttons: white, black border, a gray lower-right edge; inverted when pressed */
+.os3 .gbtn {
+  font: inherit; color: #000; background: #fff;
+  border: 2px solid #000; border-radius: 4px;
+  box-shadow: inset -2px -2px 0 #aaa;
+  padding: 2px 10px; cursor: pointer; white-space: nowrap;
+}
+.os3 .gbtn.big { padding: 4px 16px; font-size: 1.05em; }
+.os3 .gbtn:active:not(:disabled), .os3 .gbtn.on { background: #000; color: #fff; box-shadow: none; }
+.os3 .gbtn:disabled { color: #999; border-color: #888; box-shadow: none; cursor: not-allowed; }
+.os3 .gbtn.off { text-decoration: line-through; }
+@media (hover: hover) {
+  .os3 .gbtn:hover:not(:disabled):not(.on) { background: #ffffaa; }
+}
+
+/* the desktop: windows on top, program icons at the bottom */
+.o3-desk { position: relative; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.o3-wins { position: relative; flex: 1 1 auto; min-height: 0; }
+.o3-icons { display: flex; gap: 4px; padding: 6px 8px; overflow-x: auto; flex-shrink: 0; }
+.o3-icon {
+  font: inherit; background: none; border: 0; color: #fff; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  width: 5.2em; padding: 2px; flex-shrink: 0;
+}
+.o3-icon > i {
+  width: 2.4em; height: 2.4em; display: grid; place-items: center;
+  background: #fff; border: 2px solid #000; color: #000; font-style: normal; font-size: 1.1em;
+}
+.o3-icon span { padding: 0 3px; font-size: 0.9em; }
+.o3-icon.open span { background: #0000aa; }
+.o3-icon:focus-visible { outline: 1px dotted #fff; }
+.ic-paint, .ic-pal { grid-template-columns: 1fr 1fr; gap: 2px; padding: 4px; }
+.ic-paint b, .ic-pal b { width: 100%; height: 100%; display: block; }
+.ic-paint b { background: #00aaaa; }
+.ic-paint b:nth-child(2) { background: #aa0000; }
+.ic-paint b:nth-child(3) { background: #ffff55; }
+.ic-paint b:nth-child(4) { background: #0000aa; }
+.o3-icon > i.ic-df { display: flex; gap: 2px; padding: 4px; }
+.ic-df b { flex: 1; height: 100%; background: #5555ff; }
+.ic-df b:nth-child(2) { background: #ff5555; }
+.ic-df b:nth-child(3) { background: #55ff55; }
+.o3-icon > i.ic-dos { background: #000; color: #aaa; font-size: 0.8em; }
+
+/* windows */
+.w3win {
+  position: absolute;
+  width: min(25em, calc(100% - 8px));
+  max-height: calc(100% - 4px);
+  display: flex; flex-direction: column;
+  background: #fff;
+  border: 2px solid #000;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.55);
+}
+#w3-paint { width: min(27em, calc(100% - 8px)); }
+#w3-ms { width: min(19em, calc(100% - 8px)); }
+#w3-diary, #w3-dos { width: min(28em, calc(100% - 8px)); }
+.w3-title {
+  display: flex; align-items: center; gap: 6px;
+  background: #fff; color: #000;
+  border-bottom: 2px solid #000;
+  padding: 2px; cursor: move; touch-action: none; user-select: none;
+}
+.w3win.active .w3-title { background: #0000aa; color: #fff; }
+.w3-name { flex: 1; text-align: center; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.w3-sys, .w3-min {
+  font: inherit; font-size: 0.75em; cursor: pointer;
+  width: 1.9em; height: 1.6em; flex-shrink: 0;
+  background: #aaa; color: #000; border: 2px solid #000; padding: 0;
+}
+.w3-sys::before { content: ""; display: block; width: 60%; height: 3px; margin: 0 auto; background: #fff; border: 1px solid #000; }
+.w3-body { overflow: auto; padding: 8px 10px; min-height: 0; }
+.w3-body p { margin: 4px 0; }
+body.os3-opening .w3win:not(.hidden) { animation: win-open 0.35s steps(4) both; }
+
+/* phones: one window at a time, full size; the icons switch between them */
+.os3.narrow .w3win { left: 0 !important; top: 0 !important; width: 100% !important; height: 100%; max-height: none; box-shadow: none; display: none; }
+.os3.narrow .w3win.active { display: flex; }
+.os3.narrow .w3-title { cursor: default; }
+.os3.narrow .o3-bytes { display: none; }
+
+/* Paint */
+.paint-wrap { position: relative; }
+#o3Canvas {
+  display: block; width: 100%; aspect-ratio: 3 / 2; height: auto;
+  image-rendering: pixelated; image-rendering: crisp-edges;
+  border: 2px solid #000; cursor: crosshair; touch-action: manipulation;
+}
+.floater {
+  position: absolute; pointer-events: none; font-weight: 600; color: #0000aa;
+  text-shadow: 1px 1px 0 #fff, -1px -1px 0 #fff;
+  transform: translate(-50%, -100%);
+  animation: float-up 0.8s ease-out forwards;
+}
+@keyframes float-up { to { transform: translate(-50%, -260%); opacity: 0; } }
+.gallery .thumbs { display: flex; flex-wrap: wrap; gap: 8px; }
+.gallery figure { margin: 0; text-align: center; font-size: 0.8em; }
+.gallery canvas { width: 72px; height: 48px; image-rendering: pixelated; border: 1px solid #000; display: block; }
+
+/* Toolbox */
+.o3-tool { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #aaa; flex-wrap: wrap; }
+.t-ic { width: 1.8em; height: 1.8em; display: grid; place-items: center; border: 2px solid #000; flex-shrink: 0; }
+.t-info { flex: 1 1 10em; min-width: 0; }
+.t-info .dim { font-size: 0.88em; }
+.t-btns { display: flex; gap: 4px; }
+
+/* Palette */
+.pal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5em, 1fr)); gap: 6px; }
+.pal {
+  font: inherit; text-align: left; cursor: pointer;
+  display: grid; grid-template-columns: 1.6em 1fr; gap: 0 6px; align-items: center;
+  background: #fff; color: #000; border: 2px solid #000; border-radius: 3px; padding: 4px 6px;
+}
+.pal i { grid-row: span 3; width: 1.6em; height: 100%; min-height: 2.6em; background: var(--sw); border: 1px solid #000; }
+.pal .p-desc { font-size: 0.82em; color: #555; }
+.pal .p-cost { font-size: 0.88em; color: #0000aa; }
+.pal:disabled { cursor: not-allowed; color: #888; }
+.pal:disabled .p-cost { color: #888; }
+.pal.owned { border-style: dotted; color: #000; }
+.pal.owned .p-cost { color: #00aa00; }
+.pal:active:not(:disabled) { background: #000; color: #fff; }
+
+/* minigames */
+.mini-reward { font-weight: 600; color: #0000aa; }
+.mini-head { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
+.mini-head span { flex: 1 1 auto; }
+.mini-msg { min-height: 1.2em; }
+.ms-grid { display: grid; grid-template-columns: repeat(8, 1fr); border: 2px solid #000; max-width: 20em; }
+.ms-c {
+  font: inherit; font-weight: 600; aspect-ratio: 1; padding: 0; cursor: pointer;
+  background: #ccc; border: 0; box-shadow: inset 2px 2px 0 #fff, inset -2px -2px 0 #777; color: #000;
+}
+.ms-c.open { background: #eee; box-shadow: inset 0 0 0 1px #bbb; cursor: default; }
+.ms-c.mine { background: #ff5555; }
+.ms-c.flag { color: #aa0000; }
+.ms-c.n1 { color: #0000aa; }
+.ms-c.n2 { color: #00aa00; }
+.ms-c.n3 { color: #aa0000; }
+.ms-c.n4 { color: #000055; }
+.ms-c.n5 { color: #550000; }
+.ms-c.n6 { color: #00aaaa; }
+.df-row { display: grid; grid-template-columns: repeat(12, 1fr); border: 2px solid #000; background: #fff; padding: 3px; gap: 3px; }
+.df-b { height: 2.6em; border: 2px solid #000; background: var(--c); cursor: pointer; padding: 0; }
+.df-b.sel { outline: 3px dashed #000; outline-offset: 1px; transform: translateY(-4px); }
+.mm-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; max-width: 22em; }
+.mm-c {
+  font: inherit; aspect-ratio: 4 / 3; cursor: pointer; padding: 2px;
+  border: 2px solid #000; border-radius: 4px;
+  background: repeating-linear-gradient(45deg, #0000aa 0 4px, #5555ff 4px 8px);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.75em; overflow: hidden;
+}
+.mm-c.up { background: #fff; }
+.mm-c.done { background: #aaffaa; }
+.mm-c b { font-size: 1.2em; white-space: nowrap; }
+
+/* diary + DOS */
+.diary { white-space: pre-wrap; font-family: "VT323", ui-monospace, Consolas, monospace; font-size: 1.15em; margin: 0; }
+.dos-box { background: #000; color: #aaa; padding: 8px; margin: 0 0 6px; font-family: "VT323", ui-monospace, Consolas, monospace; font-size: 1.15em; white-space: pre-wrap; }
+
+/* the dialogue box */
+.o3-dlg {
+  position: absolute; left: 50%; bottom: 5.6em; transform: translateX(-50%); z-index: 9000;
+  width: min(40em, calc(100% - 16px));
+  background: #fff; border: 3px double #000; box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.6);
+  padding: 8px 12px 6px; cursor: pointer;
+}
+.dlg-who { font-weight: 600; color: #0000aa; }
+.dlg-text { min-height: 2.6em; font-size: 1.1em; margin: 2px 0; }
+.dlg-next { text-align: right; font-size: 0.8em; color: #555; animation: winblink 1s steps(1) infinite; }
+.o3-dlg.sys { background: #000; color: #fff; border-color: #fff; }
+.o3-dlg.sys .dlg-who { color: #55ffff; }
+.o3-dlg.sys .dlg-text { font-family: "VT323", ui-monospace, Consolas, monospace; font-size: 1.3em; letter-spacing: 0.04em; }
+.o3-dlg.sys .dlg-next { color: #aaa; }
+
+/* achievements window, INCR.OS 3.0 style */
+body.os3-mode .menu { background: #fff; color: #000; border: 2px solid #000; box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.6); padding: 0 0 8px; text-shadow: none; }
+body.os3-mode .menu > :not(.menu-head) { margin: 0 10px; }
+body.os3-mode .menu-head { background: #0000aa; color: #fff; border-bottom: 2px solid #000; padding: 3px 8px; font-weight: 600; }
+body.os3-mode .menu-foot { color: #555; border-top-color: #aaa; }
+body.os3-mode .am-cell { color: #555; border: 1px dotted #555; background: #fff; }
+body.os3-mode .am-cell.got { color: #000; border: 2px solid #000; }
+body.os3-mode .am-cell.sel { background: #0000aa; color: #fff; border-color: #0000aa; }
+body.os3-mode .am-detail { border-top-color: #000; }
+body.os3-mode .menu .npbtn { color: #000; border-color: #000; background: #fff; text-shadow: none; }
+body.os3-mode .menu .npbtn.on { background: #000; color: #fff; }
+
+/* the door, and the splash screen behind it */
+.doorfx {
+  position: fixed; inset: 0; z-index: 70; width: 100%; height: 100%;
+  image-rendering: pixelated; image-rendering: crisp-edges; background: #000;
+  animation: splash-in 0.6s ease-out both;
+}
+.splash3 {
+  position: fixed; inset: 0; z-index: 71;
+  background: #0000aa; color: #fff;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  font-family: "Pixelify Sans", Tahoma, Arial, sans-serif; text-align: center; padding: 16px;
+  animation: splash-in 0.3s steps(3) both;
+}
+.s3-logo { position: relative; width: 150px; height: 110px; margin-bottom: 16px; }
+.s3-logo i { position: absolute; width: 90px; height: 64px; border: 3px solid #fff; }
+.s3-logo i::before { content: ""; display: block; height: 12px; background: #fff; }
+.s3-logo i:nth-child(1) { left: 0; top: 0; background: #aa0000; }
+.s3-logo i:nth-child(2) { left: 30px; top: 22px; background: #00aa00; }
+.s3-logo i:nth-child(3) { left: 60px; top: 44px; background: #00aaaa; }
+.s3-name { font-size: 3.2em; font-weight: 600; line-height: 1; }
+.s3-ver { font-size: 1.4em; color: #ffff55; }
+.s3-copy { margin-top: 24px; font-size: 0.85em; color: #aaaaff; }
+@media (prefers-reduced-motion: reduce) {
+  .doorfx, .splash3, body.os3-opening .w3win, .floater, .dlg-next { animation: none !important; }
+}
+
+/* "the door is open" message box, for players who opened it before v0.7 */
+.doorask {
+  position: fixed; inset: 0; z-index: 66;
+  display: grid; place-items: center; padding: 16px;
+  background: rgba(0, 0, 0, 0.75);
+}
+.da-box {
+  display: flex; gap: 18px; align-items: center;
+  max-width: 560px; padding: 18px 20px;
+  background: #000; color: #fff;
+  border: 3px double #fff; box-shadow: 0 0 30px rgba(120, 160, 255, 0.35);
+  font-family: "Pixelify Sans", Tahoma, Arial, sans-serif; font-size: 0.9em; text-shadow: none;
+  animation: win-open 0.25s ease-out both;
+}
+.da-door {
+  flex-shrink: 0; width: 60px; height: 100px; position: relative;
+  border: 5px solid #7d7890; border-bottom-width: 7px;
+  background: repeating-linear-gradient(90deg, #ff55ff 0 3px, #55ffff 3px 6px, #000 6px 9px, #ffff55 9px 12px, #5555ff 12px 15px);
+  animation: da-static 0.25s steps(2) infinite;
+}
+.da-door i {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 70%;
+  background: #8a3f1e; border-right: 3px solid #4a1f0c;
+  transform: perspective(160px) rotateY(-38deg); transform-origin: left center;
+}
+.da-door i::after { content: ""; position: absolute; right: 6px; top: 48%; width: 6px; height: 6px; border-radius: 50%; background: #d9a826; }
+@keyframes da-static { 50% { background-position: 7px 0; filter: hue-rotate(90deg); } }
+.da-title { font-size: 1.4em; font-weight: 600; color: #ffff55; margin: 0 0 6px; }
+.da-text p { margin: 0 0 8px; }
+.da-dim { color: #aaa; font-size: 0.9em; }
+.da-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.da-btns button {
+  font: inherit; cursor: pointer; padding: 4px 16px;
+  background: #fff; color: #000; border: 2px solid #fff; border-radius: 4px;
+}
+.da-btns button[data-door="later"] { background: #000; color: #fff; }
+.da-btns button:focus-visible { outline: 2px dotted #ffff55; outline-offset: 2px; }
+@media (max-width: 460px) { .da-box { flex-direction: column; text-align: center; } .da-btns { justify-content: center; } }
+@media (prefers-reduced-motion: reduce) { .da-box, .da-door { animation: none !important; } }

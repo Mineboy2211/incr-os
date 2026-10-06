@@ -4,6 +4,7 @@
  * One track per era:
  *   terminal  "Phosphor": slow A-minor synth pads, soft echoing arpeggios, a pulsing bass
  *   win1      "Graphical Environment": a cheerful square-wave tune, PC-speaker style
+ *   os3       "Overlapping Windows": slow, a bit uneasy, bells over a D-minor pad
  *
  * Notes are scheduled a little ahead of time by a small sequencer (16th-note
  * steps). Browsers only allow sound after a click or key press, so nothing is
@@ -69,7 +70,7 @@ const Music = (() => {
     o.start(t);
     o.stop(t + dur + 0.05);
   }
-  function hiss({ t, dur, gain, type = 'highpass', f = 7000, q = 0.7 }) {
+  function hiss({ t, dur, gain, type = 'highpass', f = 7000, q = 0.7, dest = bus }) {
     const src = ctx.createBufferSource();
     src.buffer = noise;
     const flt = ctx.createBiquadFilter();
@@ -77,7 +78,7 @@ const Music = (() => {
     const g = ctx.createGain();
     g.gain.setValueAtTime(gain, t);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    src.connect(flt); flt.connect(g); g.connect(bus);
+    src.connect(flt); flt.connect(g); g.connect(dest);
     src.start(t, Math.random() * 0.5);
     src.stop(t + dur + 0.02);
   }
@@ -160,7 +161,38 @@ const Music = (() => {
         if (pos === 0) for (const m of chord) tone({ type: 'triangle', midi: m, t, dur: sp * 15, gain: 0.012, attack: 0.05, release: 0.3 });
       },
     },
+    os3: {
+      bpm: 96,
+      chords: [[62, 65, 69], [60, 64, 67], [58, 62, 65], [57, 61, 64]], // Dm C Bb A, 2 bars each
+      bells: [0, null, null, 2, null, null, 1, null, 3, null, 2, null, null, 1, null, null],
+      play(s, t, sp) {
+        const bar = Math.floor(s / 16), pos = s % 16, cycle = Math.floor(bar / 8);
+        const chord = this.chords[Math.floor(bar / 2) % 4];
+        if (pos === 0 && bar % 2 === 0) {
+          for (const m of chord) {
+            tone({ type: 'sine', midi: m, t, dur: sp * 32, gain: 0.03, attack: 0.9, release: 1.4 });
+            tone({ type: 'triangle', midi: m - 12, t, dur: sp * 32, gain: 0.014, attack: 1.4, release: 1.4, detune: 5 });
+          }
+        }
+        if (pos === 0 || pos === 7 || (pos === 10 && bar % 2)) {
+          tone({ type: 'triangle', midi: chord[0] - 24, t, dur: sp * 6, gain: 0.12, release: 0.2 });
+        }
+        // bell line: sine + a quiet octave, through the echo
+        const k = this.bells[(pos + (cycle % 2) * 8) % 16];
+        if (k !== null && (cycle > 0 || bar % 8 >= 2)) {
+          const m = chord[k % 3] + 12 + (k >= 3 ? 12 : 0);
+          tone({ type: 'sine', midi: m, t, dur: sp * 3, gain: 0.05, attack: 0.002, release: 0.25, send: 0.6 });
+          tone({ type: 'sine', midi: m + 12, t, dur: sp * 1.5, gain: 0.012, attack: 0.002, release: 0.2 });
+        }
+        if (cycle >= 1) {
+          if (pos === 0 || pos === 9) kick(t, 0.18);
+          if (pos === 4 || pos === 12) hiss({ t, dur: 0.06, gain: 0.03, type: 'bandpass', f: 2600, q: 1.2 });
+          if (pos % 2 === 1) hiss({ t, dur: 0.02, gain: 0.006 });
+        }
+      },
+    },
   };
+  const TITLES = { terminal: 'Phosphor', win1: 'Graphical Environment', os3: 'Overlapping Windows' };
 
   // ---------------------------------------------------------------- sequencer
   function tick() {
@@ -199,7 +231,7 @@ const Music = (() => {
     try {
       ms.playbackState = playing ? 'playing' : 'paused';
       if (playing && window.MediaMetadata) {
-        ms.metadata = new MediaMetadata({ title: track === TRACKS.win1 ? 'Graphical Environment' : 'Phosphor', artist: 'INCR.OS' });
+        ms.metadata = new MediaMetadata({ title: TITLES[Object.keys(TRACKS).find(k => TRACKS[k] === track)] || 'INCR.OS', artist: 'INCR.OS' });
       }
     } catch (e) { /* unsupported */ }
   }
@@ -291,6 +323,45 @@ const Music = (() => {
       const t = ctx.currentTime + 0.05, g = 0.06 * volume / 0.4;
       [72, 76, 79, 84].forEach((m, i) => tone({ type: 'square', midi: m, t: t + i * 0.12, dur: 0.3, gain: g, cutoff: 3000, dest: out }));
       [60, 64, 67, 72].forEach(m => tone({ type: 'triangle', midi: m, t: t + 0.5, dur: 1.4, gain: g * 0.8, attack: 0.02, release: 0.9, dest: out }));
+    },
+    // sound effects (they play even while the music is held for a transition)
+    fx(name) {
+      if (!ctx || !enabled || ctx.state !== 'running') return;
+      const t = ctx.currentTime + 0.01, g = volume / 0.4;
+      if (name === 'creak') { // an old door: a slow, wobbling low saw
+        const o = ctx.createOscillator(), f = ctx.createBiquadFilter(), a = ctx.createGain();
+        o.type = 'sawtooth';
+        o.frequency.setValueAtTime(70, t);
+        o.frequency.linearRampToValueAtTime(115, t + 0.6);
+        o.frequency.linearRampToValueAtTime(80, t + 1.1);
+        o.frequency.linearRampToValueAtTime(130, t + 1.7);
+        f.type = 'lowpass'; f.frequency.value = 900; f.Q.value = 6;
+        a.gain.setValueAtTime(0, t);
+        a.gain.linearRampToValueAtTime(0.07 * g, t + 0.15);
+        a.gain.linearRampToValueAtTime(0, t + 1.8);
+        o.connect(f); f.connect(a); a.connect(out);
+        o.start(t); o.stop(t + 1.9);
+      } else if (name === 'whoosh') { // flying through: rising noise, with digital chirps
+        const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), a = ctx.createGain();
+        src.buffer = noise; src.loop = true;
+        f.type = 'bandpass'; f.Q.value = 1.4;
+        f.frequency.setValueAtTime(250, t);
+        f.frequency.exponentialRampToValueAtTime(5000, t + 2.4);
+        a.gain.setValueAtTime(0.0001, t);
+        a.gain.exponentialRampToValueAtTime(0.16 * g, t + 2.2);
+        a.gain.linearRampToValueAtTime(0, t + 2.7);
+        src.connect(f); f.connect(a); a.connect(out);
+        src.start(t); src.stop(t + 2.8);
+        for (let i = 0; i < 14; i++) {
+          tone({ type: 'square', midi: 60 + Math.floor(Math.random() * 36), t: t + 0.3 + i * 0.15, dur: 0.04, gain: 0.025 * g, dest: out });
+        }
+      } else if (name === 'save') {
+        [67, 72, 76, 79].forEach((m, i) => tone({ type: 'sine', midi: m + 12, t: t + i * 0.07, dur: 0.35, gain: 0.05 * g, release: 0.25, dest: out }));
+      } else if (name === 'voice' || name === 'voice-sys') { // typewriter blips for the dialogue
+        const sys = name === 'voice-sys';
+        tone({ type: sys ? 'square' : 'triangle', midi: (sys ? 50 : 70) + Math.floor(Math.random() * 4), t, dur: 0.035,
+          gain: (sys ? 0.02 : 0.04) * g, cutoff: sys ? 1400 : 0, dest: out });
+      }
     },
     // for debugging: is sound actually coming out?
     level() {

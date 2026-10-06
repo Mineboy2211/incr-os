@@ -22,7 +22,7 @@ let guiBound = [];      // [element, kind, key, arg]
 let fmConfirmUntil = 0; // the Format button asks before wiping
 let guiWasOn = null;
 
-const guiOn = () => !!(S.gui && S.gui.on && S.gui.win1);
+const guiOn = () => !!(S.gui && S.gui.on && S.gui.win1) && !os3On();
 const guiNarrow = () => !!(window.matchMedia && matchMedia('(max-width: 999px), (orientation: portrait)').matches);
 const pct = f => `${(Math.max(0, Math.min(1, f)) * 100).toFixed(1)}%`;
 
@@ -122,6 +122,11 @@ const upgBtn = (kind, u, owned, cost) =>
 // markup of the System window; only depends on what is unlocked or owned
 function sysHTML() {
   const parts = [];
+  // opened the door but never went through (before v0.7, or said "not now")
+  if (S.won && !S.os3.unlocked) {
+    parts.push(sec('The Door', `<p>It's open. Something is waiting on the other side.</p>
+      <button type="button" class="gbtn big rbbtn" data-act="enter">Step through the door...</button>`));
+  }
   parts.push(sec('Reboot', `<p class="row">${meter('rb')} <span class="dim" data-t="rbinfo"></span></p>
     <button type="button" class="gbtn big rbbtn" data-act="reboot" data-d="reboot" data-t="rbbtn"></button>`));
   if (S.stats.highestTier >= 2 || S.clocks > 0) {
@@ -181,6 +186,7 @@ function renderGui(force) {
   }
   for (let i = 0; i < TIERS; i++) $(`prow${i}`).classList.toggle('hidden', !tierUnlocked(i));
   setText($('achMenuItem'), `Achievements (${achCount()}/${ACH.length})!`);
+  $('os3Back').classList.toggle('hidden', !S.os3.unlocked);
   setText($('termTitle'), `Terminal - ${S.machine.toUpperCase()}`);
   refreshBound();
 
@@ -235,6 +241,8 @@ function guiAct(act) {
     case 'patch': buyP(a); break;
     case 'ach': openAchMenu(); break;
     case 'news': openNews('recent'); break;
+    case 'os3back': os3Return(); break;
+    case 'enter': playDoorIntro(); break;
     case 'help': setGuiTab('term'); runCommand('/help'); break;
     case 'tab': setGuiTab(a); break;
     case 'event': if (ev) resolveEvent(); break;
