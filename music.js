@@ -15,6 +15,11 @@
  *   web       "Hit Counter": fast breakbeat with a wobbly bass
  *   pipes     "3D Pipes": slow, floating arpeggios
  *   outbreak  "Outbreak": tense minor pulse (plays while worm.exe spreads)
+ *   INCR.OS 6.0's jukebox adds:
+ *   os6       "Millennium": shiny late-90s pop synths
+ *   dsl       "Broadband": slow trip-hop
+ *   countdown "Countdown": ticking clock, rising tension (the last days of 1999)
+ *   y2k       "Year 2000": a celebration
  *
  * Notes are scheduled a little ahead of time by a small sequencer (16th-note
  * steps). Browsers only allow sound after a click or key press, so nothing is
@@ -362,10 +367,74 @@ const Music = (() => {
       if (bar % 4 === 3 && (pos === 0 || pos === 8)) tone({ type: 'square', midi: pos ? 81 : 84, t, dur: sp * 7, gain: 0.02, cutoff: 3000, send: 0.4 });
     },
   };
+  // ---- INCR.OS 6.0's jukebox
+  TRACKS.os6 = {
+    bpm: 124,
+    chords: [[62, 66, 69, 73], [59, 62, 66, 69], [55, 59, 62, 66], [57, 61, 64, 68]], // Dmaj7 Bm7 Gmaj7 A
+    play(s, t, sp) {
+      const bar = Math.floor(s / 16), pos = s % 16;
+      const chord = this.chords[bar % 4];
+      // a bright plucked arpeggio, an octave up every other bar
+      const k = [0, 2, 1, 3, 2, 1, 3, 2][pos % 8];
+      tone({ type: 'triangle', midi: chord[k] + (bar % 2 ? 24 : 12), t, dur: sp * 0.9, gain: 0.025, release: 0.08, send: 0.35 });
+      if (pos === 0) for (const m of chord) tone({ type: 'sawtooth', midi: m, t, dur: sp * 15, gain: 0.008, cutoff: 1600, attack: 0.1, release: 0.6, detune: 6 });
+      if (pos % 4 === 0) tone({ type: 'sine', midi: chord[0] - 24, t, dur: sp * 3, gain: 0.14, release: 0.15 });
+      if (pos % 4 === 0) kick(t, 0.28);
+      if (pos === 4 || pos === 12) { hiss({ t, dur: 0.12, gain: 0.06, type: 'bandpass', f: 2000, q: 0.7 }); }
+      if (pos % 2 === 1) hiss({ t, dur: 0.04, gain: 0.014, f: 9000 });
+    },
+  };
+  TRACKS.dsl = {
+    bpm: 84,
+    chords: [[50, 53, 57, 60], [48, 52, 55, 58], [46, 50, 53, 57], [45, 49, 52, 55]], // Dm7 C7 Bbmaj7 A7
+    play(s, t, sp) {
+      const bar = Math.floor(s / 16), pos = s % 16;
+      const chord = this.chords[bar % 4];
+      if (pos === 0) for (const m of chord) tone({ type: 'triangle', midi: m + 12, t, dur: sp * 15, gain: 0.014, attack: 0.3, release: 0.8, cutoff: 1200 });
+      if (pos === 0 || pos === 9) tone({ type: 'sine', midi: chord[0] - 12, t, dur: sp * 5, gain: 0.16, release: 0.3 });
+      if (pos === 0 || pos === 7 || pos === 10) kick(t, 0.26);
+      if (pos === 4 || pos === 12) hiss({ t, dur: 0.22, gain: 0.05, type: 'bandpass', f: 1100, q: 0.5 });
+      if (pos % 2 === 0) hiss({ t: t + (pos % 4 === 2 ? sp * 0.3 : 0), dur: 0.05, gain: 0.01, f: 7000 });
+      if (pos === 14 && bar % 2) tone({ type: 'sine', midi: chord[3] + 12, t, dur: sp * 4, gain: 0.03, release: 0.4, send: 0.6 });
+    },
+  };
+  TRACKS.countdown = {
+    bpm: 120,
+    chords: [[57, 60, 64], [58, 62, 65], [57, 60, 64], [56, 59, 64]], // Am Bb Am E
+    play(s, t, sp) {
+      const bar = Math.floor(s / 16), pos = s % 16;
+      const chord = this.chords[bar % 4];
+      // the clock: a tick on every beat, a tock in between
+      if (pos % 4 === 0) tone({ type: 'square', midi: 96, t, dur: 0.02, gain: 0.02, cutoff: 4000 });
+      if (pos % 4 === 2) tone({ type: 'square', midi: 89, t, dur: 0.02, gain: 0.015, cutoff: 3000 });
+      if (pos % 2 === 0) tone({ type: 'sawtooth', midi: chord[0] - 24, t, dur: sp * 1.6, gain: 0.04, cutoff: 420 });
+      if (pos === 0) for (const m of chord) tone({ type: 'sine', midi: m + 12, t, dur: sp * 15, gain: 0.02, attack: 1.2, release: 0.4 });
+      // it builds up over 8 bars, then starts again
+      if (bar % 8 >= 4 && pos % 4 === 0) kick(t, 0.24);
+      if (bar % 8 >= 6) hiss({ t, dur: 0.03, gain: 0.006 + (pos / 16) * 0.02, f: 8000 });
+    },
+  };
+  TRACKS.y2k = {
+    bpm: 128,
+    chords: [[60, 64, 67], [65, 69, 72], [67, 71, 74], [65, 69, 72]], // C F G F
+    tune: [72, 76, 79, 84, null, 83, 79, null, 81, 79, 76, null, 77, 76, 74, null],
+    play(s, t, sp) {
+      const bar = Math.floor(s / 16), pos = s % 16;
+      const chord = this.chords[bar % 4];
+      if (pos % 4 === 0) kick(t, 0.3);
+      if (pos === 4 || pos === 12) hiss({ t, dur: 0.14, gain: 0.08, type: 'bandpass', f: 2200, q: 0.6 });
+      if (pos % 2 === 1) hiss({ t, dur: 0.05, gain: 0.02, f: 9000 });
+      if (pos % 2 === 0) tone({ type: 'square', midi: chord[0] - 12 + (pos % 4 === 2 ? 12 : 0), t, dur: sp * 1.4, gain: 0.035, cutoff: 900 });
+      if (pos === 2 || pos === 6 || pos === 10 || pos === 14) for (const m of chord) tone({ type: 'sawtooth', midi: m + 12, t, dur: sp, gain: 0.01, cutoff: 2600 });
+      const n = this.tune[pos];
+      if (bar % 4 >= 2 && n) tone({ type: 'square', midi: n, t, dur: sp * 1.8, gain: 0.025, cutoff: 3500, send: 0.3 });
+    },
+  };
   const TITLES = {
     terminal: 'Phosphor', win1: 'Graphical Environment', os3: 'Overlapping Windows',
     os4: 'Program Manager', bbs: 'Late Night BBS', dial: 'Handshake', saver: 'Flying Daemons',
     os5: 'Start Button', web: 'Hit Counter', pipes: '3D Pipes', outbreak: 'Outbreak',
+    os6: 'Millennium', dsl: 'Broadband', countdown: 'Countdown', y2k: 'Year 2000',
   };
 
   // ---------------------------------------------------------------- sequencer

@@ -7,10 +7,19 @@
  * To ship a version: add an entry at the TOP of UPDATES and bump VERSION.
  */
 
-const VERSION = 'v0.9';
+const VERSION = 'v1.0';
 
 // newest first
 const UPDATES = [
+  { v: 'v1.0', notes: [
+    'INCR.OS 6.0 "Millennium": close the webring in 5.0 and update. new resource: downloads.',
+    'CLIPPO moves in. it means well. you get to name the voice.',
+    'download slots, bigger and bigger files, and "connection lost at 99%" (until you buy Resume support).',
+    'Y2K Update: patch every system before midnight on December 31st, 1999.',
+    'Desktop Themes: your process skins now change the whole computer: wallpaper, colors, icons and the pet.',
+    'Falling Blocks, Date Bug Hunt, Pop-up Storm, the Flying Windows screensaver, and a jukebox: your downloaded songs unlock 15 tracks.',
+    '9 new achievements.',
+  ] },
   { v: 'v0.9', notes: [
     'INCR.OS 5.0: answer the question in 4.0 and the voice goes online. new resource: hits.',
     'build a homepage with your line at the top. more blocks, more visitors, but a heavy page makes them leave.',
@@ -143,6 +152,10 @@ const NEWS = [
   { cat: 'news', when: () => S.os5.unlocked, text: 'new homepage spotted: "under construction" since 1995. visitors say it is "kind of sweet".' },
   { cat: 'news', when: () => wormOn(), text: 'BREAKING: do not open emails titled ILOVEYOU. experts "cannot stress this enough".' },
   { cat: 'news', when: () => S.os5.links >= LINKS.length, text: 'thousands of machines quarantine a worm together. nobody planned it.' },
+  { cat: 'news', when: () => S.os6.unlocked && !S.os6.y2k, text: 'Y2K: experts advise filling the bathtub "just in case". experts unsure in case of what.' },
+  { cat: 'news', when: () => !!S.os6.name, text: () => `a process named ${S.os6.name} is reported to be "doing fine, thanks for asking".` },
+  { cat: 'news', when: () => S.os6.unlocked, text: 'local paperclip offers help to 4,000 users. 3,999 decline.' },
+  { cat: 'news', when: () => S.os6.y2k, text: 'the year 2000 arrives. planes fly, banks bank, and one counter keeps counting.' },
   { cat: 'news', when: () => S.os3.unlocked && !S.os3.on, text: 'tourist from INCR.OS 3.0 spotted in the old eras. "just visiting," they insist.' },
   { cat: 'news', when: () => S.machine !== 'incr-7', text: () => `user spotted logged into ${S.machine}. incr-7 "feels a bit lonely".` },
   { cat: 'news', when: () => S.skin !== 'default', text: () => `fashion report: processes now dress as ${S.skin}. critics divided.` },

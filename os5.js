@@ -148,6 +148,7 @@ const WINS5 = [
 ];
 const WIN5 = Object.fromEntries(WINS5.map(w => [w.id, w]));
 const DESK_ICONS = ['comp', 'bin', 'home', 'guest', 'pin', 'mail', 'cd', 'hw'];
+let setup6Asked = false; // said "Later" to INCR.OS 6.0 this session
 
 // ---------------------------------------------------------------- state
 function os5Fresh() {
@@ -181,7 +182,7 @@ function os5Clean(o) {
   o.on = o.unlocked && o.on !== false;
   return o;
 }
-const os5On = () => !!(S.os5 && S.os5.unlocked && S.os5.on);
+const os5On = () => !!(S.os5 && S.os5.unlocked && S.os5.on) && !os6Live();
 
 // ---------------------------------------------------------------- formulas
 let saver5On = false;
@@ -233,7 +234,7 @@ function os5Step(dt) {
   addHits(hitRate() * dt);
   S.os5.pet.food = Math.max(0, S.os5.pet.food - dt * 100 / 3600); // hungry again after about an hour
   if (saver5On) S.os5.saverTime += dt;
-  if (!os5On()) return;
+  if (!os5On() && !os6Live()) return;
   // the modem era runs itself now: buy everything, run what fits best
   os5AutoAcc += dt;
   if (os5AutoAcc >= 1) {
@@ -621,7 +622,8 @@ function os5Build() {
   os5Built = true;
   $('os5').innerHTML = `
     <div class="o5-desk" id="o5Desk">
-      <div class="o5-icons">${DESK_ICONS.map(id => `<button type="button" class="dicon" data-o5="open:${id}">${ICON5[id]}<span>${WIN5[id].label}</span></button>`).join('')}</div>
+      <div class="o5-icons">${DESK_ICONS.map(id => `<button type="button" class="dicon" data-o5="open:${id}">${ICON5[id]}<span>${WIN5[id].label}</span></button>`).join('')}
+        <button type="button" class="dicon setup6-icon hidden" id="o5Setup6Icon" data-o5="setup6"><i class="i5 i-up6">6.0</i><span>INCR.OS 6.0</span></button></div>
       ${WINS5.map(w => `
       <section class="w5win hidden" id="w5-${w.id}" data-win="${w.id}" aria-label="${w.label}">
         <div class="w5-title"><span class="w5-ico">${ICON5[w.id]}</span><span class="w5-name" data-x="title:${w.id}"></span>
@@ -630,6 +632,13 @@ function os5Build() {
         <div class="w5-body">${win5Body(w.id)}</div>
       </section>`).join('')}
       <div class="pet" id="o5Pet" data-o5="pet" title="your daemon"><canvas width="16" height="14" id="o5PetSprite"></canvas><span class="pet-say hidden" id="o5PetSay"></span></div>
+    <div id="o5Setup6" class="o5-setup hidden" role="dialog" aria-label="INCR.OS 6.0">
+      <div class="w5-title"><span class="w5-name">INCR.OS 6.0 Update</span></div>
+      <div class="w5-body"><p>An update is available: INCR.OS 6.0 "Millennium".</p>
+        <p class="dim">The year 2000 is coming. Hits, signal, pixels and bytes keep running on their own.</p>
+        <div class="btnrow"><button type="button" class="gbtn big" data-o5="setup6">Update now</button>
+        <button type="button" class="gbtn" data-o5="setup6later">Later</button></div></div>
+    </div>
       <div id="o5Dlg" class="o5-dlg hidden" role="dialog" aria-live="polite">
         <div class="dlg-who" id="o5Who"></div><div class="dlg-text" id="o5Say"></div><div class="dlg-next">click to continue &#9660;</div>
       </div>
@@ -763,7 +772,7 @@ function os5Render() {
     $('os5').classList.toggle('hidden', !on);
     document.body.classList.toggle('os5-mode', on);
     if (on) { os5Build(); o5Layout(); }
-    else if (!introRunning && !os3On() && !os4Live()) $('app').classList.remove('hidden');
+    else if (!introRunning && !os3On() && !os4Live() && !os6Live() && !(has6() && setup6Running)) $('app').classList.remove('hidden');
     if (!on) stopSaver5();
   }
   if (!on) return;
@@ -773,6 +782,11 @@ function os5Render() {
   $('o5Start').classList.toggle('hidden', !startOpen);
   $('o5StartBtn').classList.toggle('on', startOpen);
   $('o5Shut').classList.toggle('hidden', !shutdown);
+  // after the ring closes: INCR.OS 6.0
+  const ready6 = has6() && setup6Ready();
+  $('o5Setup6Icon').classList.toggle('hidden', !ready6 && !(has6() && S.os6.unlocked));
+  $('o5Setup6Icon').dataset.o5 = has6() && S.os6.unlocked ? 'os6back' : 'setup6';
+  $('o5Setup6').classList.toggle('hidden', !ready6 || !!dlg5 || setup6Asked || (has6() && setup6Running));
   setText($('o5SaverItem'), `Screensaver: ${S.os5.saver ? 'On' : 'Off'}`);
   if (binConfirm && Date.now() > binConfirm) binConfirm = 0;
   petTick();
@@ -948,6 +962,9 @@ function os5Act(act) {
     case 'shutdown': shutdown = true; Music.fx('voice-sys'); break;
     case 'wake': shutdown = false; Music.chime(); break;
     case 'visit': os5Visit(a); break;
+    case 'setup6': if (has6()) playSetup6(); break;
+    case 'setup6later': setup6Asked = true; break;
+    case 'os6back': if (has6()) os6Return(); break;
     case 'ach': openAchMenu(); break;
   }
   os5Render();

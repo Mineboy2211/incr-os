@@ -209,7 +209,7 @@ function os4Clean(o) {
   o.on = o.unlocked && o.on !== false;
   return o;
 }
-const os4On = () => !!(S.os4 && S.os4.unlocked && S.os4.on) && !os5Live();
+const os4On = () => !!(S.os4 && S.os4.unlocked && S.os4.on) && !os5Live() && !os6Live();
 
 // ---------------------------------------------------------------- formulas
 const PROG_BY_ID = Object.fromEntries(PROGS.map((p, i) => [p.id, i]));
@@ -250,7 +250,7 @@ function os4Step(dt) {
   if (!S.os4.unlocked) return;
   addSig(sigRate() * dt);
   if (saverOn) S.os4.saverTime += dt;
-  if (!os4On() && !os5Live()) return;
+  if (!os4On() && !os5Live() && !os6Live()) return;
   // over here (and in 5.0), pixels run themselves too
   os4AutoAcc += dt;
   if (os4AutoAcc >= 1) {
@@ -720,6 +720,7 @@ function os4Build() {
       </div>
       <div class="o4-btns">
         <button type="button" class="gbtn hidden" data-o4="os5back" id="o4Back5">INCR.OS 5.0</button>
+        <button type="button" class="gbtn hidden" data-o4="os6back" id="o4Back6">INCR.OS 6.0</button>
         <button type="button" class="gbtn" data-o4="open:pm">Programs</button>
         <button type="button" class="gbtn" data-o4="ach">Achievements</button>
         <button type="button" class="gbtn" data-o4="music" id="o4Music" aria-label="Music on/off">&#9835;</button>
@@ -842,7 +843,7 @@ function os4Render() {
     $('os4').classList.toggle('hidden', !on);
     document.body.classList.toggle('os4-mode', on);
     if (on) { os4Build(); o4Layout(); }
-    else if (!introRunning && !os3On() && !os5Live() && !(has5() && setup5Running)) $('app').classList.remove('hidden');
+    else if (!introRunning && !os3On() && !os5Live() && !os6Live() && !(has5() && setup5Running)) $('app').classList.remove('hidden');
     if (!on) stopSaver();
   }
   if (!on) return;
@@ -855,6 +856,7 @@ function os4Render() {
   $('o4Setup5Group').classList.toggle('hidden', !ready5);
   $('o4Setup5').classList.toggle('hidden', !ready5 || !!dlg4 || setup5Asked || setup5Running);
   $('o4Back5').classList.toggle('hidden', !(has5() && S.os5.unlocked));
+  $('o4Back6').classList.toggle('hidden', !(has6() && S.os6.unlocked));
   const c = S.os4.chapter;
   if (!dlg4 && ((c < CHAPTERS4.length - 1 && c <= S.os4.conns) || (c === CHAPTERS4.length - 1 && S.os4.line))) startChapter4(c);
 }
@@ -1015,7 +1017,8 @@ function os4Act(act) {
     case 'visit': os4Visit(a); break;
     case 'setup5': if (has5()) playSetup5(); break;
     case 'setup5later': setup5Asked = true; break;
-    case 'os5back': if (has5()) os5Return(); break;
+    case 'os5back': if (has5()) { S.os6 && (S.os6.on = false); os5Return(); } break;
+    case 'os6back': if (has6()) os6Return(); break;
     case 'ach': openAchMenu(); break;
   }
   os4Render();

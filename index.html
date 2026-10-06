@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&family=VT323&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=0.9">
+  <link rel="stylesheet" href="style.css?v=1.0">
 </head>
 <body>
   <div id="crt" class="crt scan flicker">
@@ -58,7 +58,7 @@
         </section>
         <section class="win" id="winSys" aria-label="System">
           <div class="win-title"><span class="w-sys" aria-hidden="true"></span><span class="w-name">System</span><span class="w-ctl" aria-hidden="true"><i>&#9660;</i><i>&#9650;</i></span></div>
-          <div class="win-menu"><button type="button" data-act="ach" id="achMenuItem">Achievements!</button><button type="button" data-act="news">News!</button><button type="button" data-act="os3back" id="os3Back" class="hidden">INCR.OS 3.0!</button><button type="button" data-act="os4back" id="os4Back" class="hidden">INCR.OS 4.0!</button><button type="button" data-act="os5back" id="os5Back" class="hidden">INCR.OS 5.0!</button></div>
+          <div class="win-menu"><button type="button" data-act="ach" id="achMenuItem">Achievements!</button><button type="button" data-act="news">News!</button><button type="button" data-act="os3back" id="os3Back" class="hidden">INCR.OS 3.0!</button><button type="button" data-act="os4back" id="os4Back" class="hidden">INCR.OS 4.0!</button><button type="button" data-act="os5back" id="os5Back" class="hidden">INCR.OS 5.0!</button><button type="button" data-act="os6back" id="os6Back" class="hidden">INCR.OS 6.0!</button></div>
           <div class="win-body" id="sysBody"></div>
         </section>
       </div>
@@ -128,6 +128,18 @@
     <canvas id="doorFx" class="doorfx hidden" aria-hidden="true"></canvas>
     <!-- INCR.OS 4.0 (after the last picture): built by os4.js -->
     <div id="os4" class="os4 hidden"></div>
+    <!-- INCR.OS 6.0 (after the webring): built by os6.js -->
+    <div id="os6" class="os6 hidden"></div>
+    <div id="setup6" class="setup6 hidden" aria-hidden="true">
+      <div class="s6-side"><b>INCR.OS 6.0</b><span>Millennium</span><ol id="setup6Steps"></ol><p id="setup6Eta"></p></div>
+      <div class="s6-main"><h2>Welcome to INCR.OS 6.0</h2><p>Setup is getting your computer ready for the year 2000.</p>
+        <p class="dim">It looks like you're installing something! (CLIPPO is already here.)</p></div>
+    </div>
+    <div id="start6" class="start6 hidden" aria-hidden="true">
+      <div class="s5-logo"><div class="s5-win"><i></i><i></i><i></i></div><div class="s5-name">INCR.OS<b>6.0</b></div></div>
+      <div class="s6-sub">Millennium</div>
+      <div class="s5-bar"><i></i></div>
+    </div>
     <!-- INCR.OS 5.0 (after the question): built by os5.js -->
     <div id="os5" class="os5 hidden"></div>
     <div id="start5" class="start5 hidden" aria-hidden="true">
@@ -166,15 +178,16 @@
     </div>
   </div>
   <!-- ?v= is the game version: bump it with VERSION in news.js so browsers fetch the new files -->
-  <script src="big.js?v=0.9"></script>
-  <script src="skins.js?v=0.9"></script>
-  <script src="news.js?v=0.9"></script>
-  <script src="filesystem.js?v=0.9"></script>
-  <script src="music.js?v=0.9"></script>
-  <script src="gui.js?v=0.9"></script>
-  <script src="os3.js?v=0.9"></script>
-  <script src="os4.js?v=0.9"></script>
-  <script src="os5.js?v=0.9"></script>
-  <script src="game.js?v=0.9"></script>
+  <script src="big.js?v=1.0"></script>
+  <script src="skins.js?v=1.0"></script>
+  <script src="news.js?v=1.0"></script>
+  <script src="filesystem.js?v=1.0"></script>
+  <script src="music.js?v=1.0"></script>
+  <script src="gui.js?v=1.0"></script>
+  <script src="os3.js?v=1.0"></script>
+  <script src="os4.js?v=1.0"></script>
+  <script src="os5.js?v=1.0"></script>
+  <script src="os6.js?v=1.0"></script>
+  <script src="game.js?v=1.0"></script>
 </body>
 </html>
