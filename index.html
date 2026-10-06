@@ -58,7 +58,7 @@
         </section>
         <section class="win" id="winSys" aria-label="System">
           <div class="win-title"><span class="w-sys" aria-hidden="true"></span><span class="w-name">System</span><span class="w-ctl" aria-hidden="true"><i>&#9660;</i><i>&#9650;</i></span></div>
-          <div class="win-menu"><button type="button" data-act="ach" id="achMenuItem">Achievements!</button><button type="button" data-act="news">News!</button><button type="button" data-act="os3back" id="os3Back" class="hidden">INCR.OS 3.0!</button></div>
+          <div class="win-menu"><button type="button" data-act="ach" id="achMenuItem">Achievements!</button><button type="button" data-act="news">News!</button><button type="button" data-act="os3back" id="os3Back" class="hidden">INCR.OS 3.0!</button><button type="button" data-act="os4back" id="os4Back" class="hidden">INCR.OS 4.0!</button></div>
           <div class="win-body" id="sysBody"></div>
         </section>
       </div>
@@ -126,6 +126,25 @@
     <!-- INCR.OS 3.0 (behind the door): built by os3.js -->
     <div id="os3" class="os3 hidden"></div>
     <canvas id="doorFx" class="doorfx hidden" aria-hidden="true"></canvas>
+    <!-- INCR.OS 4.0 (after the last picture): built by os4.js -->
+    <div id="os4" class="os4 hidden"></div>
+    <div id="setup4" class="setup4 hidden" aria-hidden="true">
+      <div class="st-head">INCR.OS 4.0 Setup</div>
+      <div class="st-body">
+        <p>Setup is copying files to your hard disk.</p>
+        <div class="st-bar"><i id="setup4Bar"></i></div>
+        <p id="setup4Text"></p>
+      </div>
+      <div class="st-foot">ENTER=Continue  F1=Help  F3=Exit</div>
+    </div>
+    <div id="splash4" class="splash4 hidden" aria-hidden="true">
+      <div class="s4-frame">
+        <div class="s4-logo"><i></i><i></i><i></i><i></i></div>
+        <div class="s4-name">INCR.OS</div>
+        <div class="s4-ver">Version 4.0</div>
+        <div class="s4-copy">Copyright (c) Incremental Systems Corp., 1985-1990. All rights reserved.</div>
+      </div>
+    </div>
     <div id="splash3" class="splash3 hidden" aria-hidden="true">
       <div class="s3-logo"><i></i><i></i><i></i></div>
       <div class="s3-name">INCR.OS</div>
@@ -146,6 +165,7 @@
   <script src="music.js"></script>
   <script src="gui.js"></script>
   <script src="os3.js"></script>
+  <script src="os4.js"></script>
   <script src="game.js"></script>
 </body>
 </html>

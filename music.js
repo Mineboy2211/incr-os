@@ -5,6 +5,11 @@
  *   terminal  "Phosphor": slow A-minor synth pads, soft echoing arpeggios, a pulsing bass
  *   win1      "Graphical Environment": a cheerful square-wave tune, PC-speaker style
  *   os3       "Overlapping Windows": slow, a bit uneasy, bells over a D-minor pad
+ *   INCR.OS 4.0 has a Media Player, with four more:
+ *   os4       "Program Manager": jazzy electric piano, walking bass
+ *   bbs       "Late Night BBS": slow lo-fi chords, soft drums, crackle
+ *   dial      "Handshake": fast chiptune arpeggios
+ *   saver     "Flying Daemons": ambient pads and slow bells
  *
  * Notes are scheduled a little ahead of time by a small sequencer (16th-note
  * steps). Browsers only allow sound after a click or key press, so nothing is
@@ -192,7 +197,100 @@ const Music = (() => {
       },
     },
   };
-  const TITLES = { terminal: 'Phosphor', win1: 'Graphical Environment', os3: 'Overlapping Windows' };
+  // ---- INCR.OS 4.0's Media Player
+  TRACKS.os4 = {
+    bpm: 104,
+    chords: [[53, 57, 60, 64], [52, 55, 59, 62], [50, 53, 57, 60], [48, 52, 55, 59]], // Fmaj7 Em7 Dm7 Cmaj7
+    tune: [72, null, 74, 76, null, 79, null, 76, 74, null, 72, null, 69, null, 72, null],
+    play(s, t, sp) {
+      const bar = Math.floor(s / 16), pos = s % 16;
+      const chord = this.chords[bar % 4];
+      // electric piano comping: sine + a softer octave, quick decay
+      if (pos === 0 || pos === 6 || pos === 10) {
+        for (const m of chord) {
+          tone({ type: 'sine', midi: m + 12, t, dur: sp * (pos === 0 ? 5 : 3), gain: 0.022, attack: 0.004, release: 0.3 });
+          tone({ type: 'triangle', midi: m + 24, t, dur: sp * 1.5, gain: 0.006, attack: 0.002, release: 0.1 });
+        }
+      }
+      // walking bass, quarter notes
+      if (pos % 4 === 0) {
+        const walk = [chord[0], chord[1], chord[2], chord[0] + (pos === 12 ? -1 : 2)][pos / 4];
+        tone({ type: 'triangle', midi: walk - 24, t, dur: sp * 3.6, gain: 0.13, release: 0.12 });
+      }
+      // a little tune every other bar pair, through the echo
+      if (Math.floor(bar / 2) % 2 === 1) {
+        const n = bar % 2 === 0 ? this.tune[pos] : null;
+        if (n) tone({ type: 'sine', midi: n, t, dur: sp * 1.8, gain: 0.04, release: 0.2, send: 0.4 });
+      }
+      // brushes: swung hats, soft kick
+      if (pos % 2 === 0) hiss({ t: t + (pos % 4 === 2 ? sp * 0.33 : 0), dur: 0.05, gain: 0.012, type: 'bandpass', f: 6000, q: 0.8 });
+      if (pos === 0 || pos === 10) kick(t, 0.16);
+      if (pos === 4 || pos === 12) hiss({ t, dur: 0.14, gain: 0.03, type: 'bandpass', f: 1500, q: 0.6 });
+    },
+  };
+  TRACKS.bbs = {
+    bpm: 76,
+    chords: [[57, 60, 64, 67, 71], [50, 53, 57, 60, 64], [55, 59, 62, 65, 69], [48, 52, 55, 59, 62]], // Am9 Dm9 G9 Cmaj9
+    play(s, t, sp) {
+      const bar = Math.floor(s / 16), pos = s % 16;
+      const chord = this.chords[bar % 4];
+      if (pos === 0) {
+        for (const m of chord) tone({ type: 'triangle', midi: m, t, dur: sp * 15, gain: 0.016, attack: 0.08, release: 0.8, cutoff: 1100 });
+        tone({ type: 'sine', midi: chord[0] - 24, t, dur: sp * 7, gain: 0.14, release: 0.3 });
+      }
+      if (pos === 8) tone({ type: 'sine', midi: chord[0] - 24 + (bar % 2 ? 7 : 0), t, dur: sp * 6, gain: 0.12, release: 0.3 });
+      if (pos === 0 || pos === 7 || pos === 10) kick(t, 0.2);
+      if (pos === 4 || pos === 12) hiss({ t, dur: 0.18, gain: 0.04, type: 'bandpass', f: 1300, q: 0.5 });
+      if (pos % 2 === 1) hiss({ t, dur: 0.03, gain: 0.008 });
+      if (Math.random() < 0.35) hiss({ t: t + Math.random() * sp, dur: 0.01, gain: 0.012, f: 3000 }); // crackle
+      // a few lonely notes
+      if ((pos === 3 || pos === 11) && bar % 2) {
+        tone({ type: 'sine', midi: chord[2 + Math.floor(Math.random() * 3)] + 12, t, dur: sp * 3, gain: 0.03, release: 0.4, send: 0.5 });
+      }
+    },
+  };
+  TRACKS.dial = {
+    bpm: 132,
+    chords: [[60, 64, 67], [55, 59, 62], [57, 60, 64], [53, 57, 60]], // C G Am F
+    play(s, t, sp) {
+      const bar = Math.floor(s / 16), pos = s % 16;
+      const chord = this.chords[bar % 4];
+      const arp = [0, 1, 2, 3, 2, 1][pos % 6];
+      tone({ type: 'square', midi: chord[arp % 3] + 12 * (1 + Math.floor(arp / 3)), t, dur: sp * 0.8, gain: 0.018, cutoff: 2600 });
+      if (pos % 2 === 0) tone({ type: 'square', midi: chord[0] - 12 + (pos % 4 === 2 ? 12 : 0), t, dur: sp * 1.4, gain: 0.03, cutoff: 900 });
+      if (pos % 4 === 0) kick(t, 0.25);
+      if (pos % 8 === 4) hiss({ t, dur: 0.09, gain: 0.06, type: 'bandpass', f: 2200, q: 0.8 });
+      hiss({ t, dur: 0.015, gain: pos % 2 ? 0.006 : 0.012 });
+      // lead, every other phrase
+      if (Math.floor(bar / 4) % 2 && pos % 4 === 0) {
+        tone({ type: 'square', midi: chord[(pos / 4 + bar) % 3] + 24, t, dur: sp * 3, gain: 0.02, cutoff: 3500, send: 0.3 });
+      }
+    },
+  };
+  TRACKS.saver = {
+    bpm: 64,
+    chords: [[52, 56, 59, 63], [49, 52, 56, 59], [45, 49, 52, 56], [47, 51, 54, 59]], // Emaj7 C#m7 Amaj7 B
+    scale: [64, 66, 68, 71, 73, 76, 78, 80],
+    play(s, t, sp) {
+      const bar = Math.floor(s / 16), pos = s % 16;
+      const chord = this.chords[Math.floor(bar / 2) % 4];
+      if (pos === 0 && bar % 2 === 0) {
+        for (const m of chord) {
+          tone({ type: 'sine', midi: m, t, dur: sp * 32, gain: 0.03, attack: 2, release: 2 });
+          tone({ type: 'triangle', midi: m + 12, t, dur: sp * 32, gain: 0.01, attack: 3, release: 2, detune: 7 });
+        }
+        tone({ type: 'sine', midi: chord[0] - 12, t, dur: sp * 32, gain: 0.07, attack: 1.5, release: 2 });
+      }
+      if (pos % 6 === 0 && Math.random() < 0.7) {
+        const m = this.scale[Math.floor(Math.random() * this.scale.length)];
+        tone({ type: 'sine', midi: m, t, dur: sp * 4, gain: 0.035, attack: 0.002, release: 0.6, send: 0.7 });
+      }
+    },
+  };
+  const TITLES = {
+    terminal: 'Phosphor', win1: 'Graphical Environment', os3: 'Overlapping Windows',
+    os4: 'Program Manager', bbs: 'Late Night BBS', dial: 'Handshake', saver: 'Flying Daemons',
+  };
 
   // ---------------------------------------------------------------- sequencer
   function tick() {
@@ -355,6 +453,27 @@ const Music = (() => {
         for (let i = 0; i < 14; i++) {
           tone({ type: 'square', midi: 60 + Math.floor(Math.random() * 36), t: t + 0.3 + i * 0.15, dur: 0.04, gain: 0.025 * g, dest: out });
         }
+      } else if (name === 'modem') { // dial tones, ringing, then the handshake screech
+        const hz = (f, at, dur, gain, type = 'sine') => {
+          const o = ctx.createOscillator(), a = ctx.createGain();
+          o.type = type; o.frequency.value = f;
+          a.gain.setValueAtTime(0, at);
+          a.gain.linearRampToValueAtTime(gain * g, at + 0.005);
+          a.gain.setValueAtTime(gain * g, at + dur - 0.01);
+          a.gain.linearRampToValueAtTime(0, at + dur);
+          o.connect(a); a.connect(out);
+          o.start(at); o.stop(at + dur + 0.02);
+          return o;
+        };
+        const DTMF = [[941, 1336], [697, 1209], [770, 1477], [697, 1336], [852, 1336], [941, 1336], [697, 1209]];
+        DTMF.forEach(([lo, hi], i) => { hz(lo, t + i * 0.1, 0.07, 0.04); hz(hi, t + i * 0.1, 0.07, 0.04); });
+        hz(440, t + 0.8, 0.5, 0.03); hz(480, t + 0.8, 0.5, 0.03); // ring
+        hz(2100, t + 1.45, 0.35, 0.03); // answer tone
+        for (let i = 0; i < 10; i++) hz(i % 2 ? 1200 : 2400, t + 1.85 + i * 0.05, 0.05, 0.025, 'square');
+        hiss({ t: t + 1.85, dur: 0.9, gain: 0.08 * g, type: 'bandpass', f: 1800, q: 0.4, dest: out });
+        const w = hz(1800, t + 2.3, 0.5, 0.02, 'sawtooth');
+        w.frequency.setValueAtTime(1800, t + 2.3);
+        w.frequency.linearRampToValueAtTime(900, t + 2.8);
       } else if (name === 'save') {
         [67, 72, 76, 79].forEach((m, i) => tone({ type: 'sine', midi: m + 12, t: t + i * 0.07, dur: 0.35, gain: 0.05 * g, release: 0.25, dest: out }));
       } else if (name === 'voice' || name === 'voice-sys') { // typewriter blips for the dialogue

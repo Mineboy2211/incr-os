@@ -57,7 +57,7 @@ const GRAYS = COLORS.map(c => {
 });
 
 // Pixels to paint for each picture. After the 6 memories, untitled pictures.
-const PIC_GOALS = [5e3, 2e5, 8e6, 3e8, 1.2e10, 4e11];
+const PIC_GOALS = [5e3, 2e5, 8e6, 3e8, 1.2e10, 1e11];
 const PIC_W = 24, PIC_H = 16;
 // 24x16, one hex digit per pixel = a palette index
 const PICTURES = [
@@ -206,7 +206,7 @@ function os3Clean(o) {
   o.on = o.unlocked && o.on !== false;
   return o;
 }
-const os3On = () => !!(S.os3 && S.os3.unlocked && S.os3.on);
+const os3On = () => !!(S.os3 && S.os3.unlocked && S.os3.on) && !os4On();
 
 // ---------------------------------------------------------------- formulas
 const ownColor = i => !!S.os3.colors[i];
@@ -248,7 +248,7 @@ function os3Step(dt) {
   if (!S.os3.unlocked) return;
   addPx(pxRate() * dt);
   // over here the bytes run themselves
-  if (os3On()) {
+  if (os3On() || os4On()) {
     os3AutoAcc += dt;
     if (os3AutoAcc >= 1) { os3AutoAcc = 0; maxAll(); }
   }
@@ -557,7 +557,8 @@ function winBody(id) {
 
 C:\\INCR&gt; _</pre>
       <div class="btnrow"><button type="button" class="gbtn" data-o3="visit:1">Run INCR10.EXE</button>
-      <button type="button" class="gbtn" data-o3="visit:2">Run INCR20.EXE</button></div>
+      <button type="button" class="gbtn" data-o3="visit:2">Run INCR20.EXE</button>
+      <button type="button" class="gbtn hidden" data-o3="setup" id="o3SetupBtn">Run SETUP.EXE</button></div>
       <p class="dim">Your old save is waiting there exactly as you left it, so you can finish its achievements. Pixels keep coming meanwhile. Come back with /win3 or the "INCR.OS 3.0!" menu.</p>`;
   }
   return '';
@@ -575,6 +576,7 @@ function os3Build() {
         <span class="o3-stat o3-bytes"><span class="dim">BYTES</span> <span data-x="bytes"></span> <span class="dim">(automated)</span></span>
       </div>
       <div class="o3-btns">
+        <button type="button" class="gbtn hidden" data-o3="os4back" id="o3Back4">INCR.OS 4.0</button>
         <button type="button" class="gbtn" data-o3="ach">Achievements</button>
         <button type="button" class="gbtn" data-o3="music" id="o3Music" aria-label="Music on/off">&#9835;</button>
       </div>
@@ -591,6 +593,13 @@ function os3Build() {
       <nav class="o3-icons" aria-label="programs">${WINS.map(w => `
         <button type="button" class="o3-icon" data-o3="open:${w.id}" id="o3i-${w.id}">${ICON_ART[w.id]}<span>${w.label}</span></button>`).join('')}
       </nav>
+      <div id="o3Setup" class="o3-setup hidden" role="dialog" aria-label="INCR.OS 4.0 Setup">
+        <div class="w3-title"><span class="w3-name">INCR.OS 4.0 Setup</span></div>
+        <div class="w3-body"><p>A new version wrote itself while you were painting.</p>
+          <p class="dim">INCR.OS 4.0 is ready to install. Pixels and bytes keep running on their own.</p>
+          <div class="btnrow"><button type="button" class="gbtn big" data-o3="setup">Install</button>
+          <button type="button" class="gbtn" data-o3="setuplater">Later</button></div></div>
+      </div>
       <div id="o3Dlg" class="o3-dlg hidden" role="dialog" aria-live="polite">
         <div class="dlg-who" id="o3Who"></div>
         <div class="dlg-text" id="o3Say"></div>
@@ -682,7 +691,7 @@ function os3Render() {
     $('os3').classList.toggle('hidden', !on);
     document.body.classList.toggle('os3-mode', on);
     if (on) { os3Build(); os3Layout(); }
-    else if (!introRunning) $('app').classList.remove('hidden');
+    else if (!introRunning && !os4On() && !setupRunning) $('app').classList.remove('hidden');
   }
   if (!on) return;
   os3Lists();
@@ -693,6 +702,11 @@ function os3Render() {
   if (cv && sig !== o3Sig.pic) { o3Sig.pic = sig; drawPic(cv, S.os3.pics, shown); }
   $('o3Music').classList.toggle('off', !S.opts.music);
   if (!dlg && S.os3.chapter <= S.os3.pics && S.os3.chapter < CHAPTERS.length) startChapter(S.os3.chapter);
+  // after the last memory: INCR.OS 4.0 setup
+  $('o3Back4').classList.toggle('hidden', !S.os4.unlocked);
+  const ready = setupReady();
+  $('o3SetupBtn').classList.toggle('hidden', !ready);
+  $('o3Setup').classList.toggle('hidden', !ready || !!dlg || setupAsked || setupRunning);
 }
 
 // little "+12" that floats up from where you clicked
@@ -726,6 +740,9 @@ function os3Act(act) {
     case 'mm': mmClick(i); miniDraw('mm'); break;
     case 'mmnew': clearTimeout(mmTimer); mmNew(); miniDraw('mm'); break;
     case 'visit': os3Visit(a); break;
+    case 'setup': playSetup(); break;
+    case 'setuplater': setupAsked = true; break;
+    case 'os4back': os4Return(); break;
     case 'ach': openAchMenu(); break;
     case 'music': $('musicBtn').click(); break;
   }
@@ -733,6 +750,7 @@ function os3Act(act) {
 }
 
 // ---------------------------------------------------------------- going back and forth
+let setupAsked = false; // said "Later" to the setup box this session
 function os3Visit(era) {
   S.os3.on = false;
   if (era === '1') S.gui.on = false;
