@@ -155,7 +155,7 @@ function newState() {
       reboots: 0, formats: 0, fastestReboot: null,
       bestBytes: 1, totalBytes: ZERO, highestTier: 0, overflowed: false,
     },
-    opts: { theme: 'green', scan: true, flicker: true, notation: 'sci', news: true, keys: 'auto' },
+    opts: { theme: 'green', scan: true, flicker: true, notation: 'sci', news: true, keys: 'auto', music: true, volume: 40 },
     seenVersion: '', // last version whose changelog the player opened
     won: false,      // opened the door
     lastTick: Date.now(),
@@ -1578,6 +1578,8 @@ function cmdSys([what, arg]) {
       out(`  notation   ${o.notation}          /sys notation`);
       out(`  touch keys ${pad(o.keys, 12)} /sys keys <auto|on|off>`);
       if (S.gui.win1) out(`  graphics   ${S.gui.on ? 'on ' : 'off'}          /sys gui <on|off>`);
+      out(`  music      ${o.music ? 'on ' : 'off'}          /sys music <on|off>`);
+      out(`  volume     ${pad(o.volume, 12)} /sys volume <0-100>`);
       out('  /sys save · /sys export · /sys import <code> · /sys reset', 'dim');
       return;
     case 'theme':
@@ -1585,6 +1587,17 @@ function cmdSys([what, arg]) {
       o.theme = arg; applyOpts(); return out(`phosphor set to ${arg}.`);
     case 'scanlines': o.scan = !o.scan; applyOpts(); return out(`scanlines ${o.scan ? 'on' : 'off'}.`);
     case 'flicker': o.flicker = !o.flicker; applyOpts(); return out(`flicker ${o.flicker ? 'on' : 'off'}.`);
+    case 'music':
+      if (!['on', 'off'].includes(arg)) return out('usage: /sys music <on|off>', 'w');
+      o.music = arg === 'on';
+      return out(`music ${arg}.`);
+    case 'volume': {
+      const v = Math.round(Number(arg));
+      if (!(v >= 0 && v <= 100)) return out('usage: /sys volume <0-100>', 'w');
+      o.volume = v;
+      if (v > 0) o.music = true;
+      return out(`volume ${v}.`);
+    }
     case 'keys':
       if (!['auto', 'on', 'off'].includes(arg)) return out('usage: /sys keys <auto|on|off>  (auto = only on touch screens)', 'w');
       o.keys = arg; applyOpts(); return out(`touch keys: ${arg}.`);
@@ -1661,7 +1674,7 @@ function complete(inp) {
     else if (name === 'patch') pool = PATCHES.filter(u => !hasP(u.id)).map(u => u.key);
     else if (name === 'tutorial') pool = ['skip'];
     else if (name === 'ach') pool = ['list'];
-    else if (name === 'sys') pool = ['theme', 'scanlines', 'flicker', 'notation', 'keys', 'gui', 'save', 'export', 'import', 'reset'];
+    else if (name === 'sys') pool = ['theme', 'scanlines', 'flicker', 'notation', 'music', 'volume', 'keys', 'gui', 'save', 'export', 'import', 'reset'];
     else return;
   }
   applyCompletion(inp, base, pool, prefix);
@@ -1975,6 +1988,10 @@ function render() {
   }
   renderConfirm();
   renderGui();
+  Music.sync(guiOn() ? 'win1' : 'terminal', S.opts.music, S.opts.volume);
+  const mb = $('musicBtn');
+  mb.classList.toggle('off', !S.opts.music);
+  mb.setAttribute('aria-pressed', String(!!S.opts.music));
   checkTutorial();
   const obj = $('objective');
   obj.classList.toggle('hidden', S.tut.done);
@@ -2099,6 +2116,14 @@ function init() {
   wireNews();
   wireAchMenu();
   wireGui();
+  const unlockAudio = () => Music.unlock();
+  window.addEventListener('pointerdown', unlockAudio);
+  window.addEventListener('keydown', unlockAudio);
+  $('musicBtn').addEventListener('click', () => {
+    S.opts.music = !S.opts.music;
+    if (S.opts.music && S.opts.volume === 0) S.opts.volume = 40;
+    log(`music ${S.opts.music ? 'on' : 'off'}. (/sys volume to change how loud)`, 'dim');
+  });
 
   checkCommands(true); // what the save already had is not "new"
 

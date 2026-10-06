@@ -7,10 +7,14 @@
  * To ship a version: add an entry at the TOP of UPDATES and bump VERSION.
  */
 
-const VERSION = 'v0.5';
+const VERSION = 'v0.6';
 
 // newest first
 const UPDATES = [
+  { v: 'v0.6', notes: [
+    'music! each era has its own track, synthesized live: "Phosphor" for the terminal, "Graphical Environment" for INCR.OS 2.0.',
+    'the note button next to NEWS turns it on or off. /sys volume 0-100 sets how loud.',
+  ] },
   { v: 'v0.5', notes: [
     'your first REBOOT installs INCR.OS 2.0: a whole graphical environment with windows, menus and buttons.',
     'the terminal lives on as a DOS window. miss the green screen? /sys gui off',

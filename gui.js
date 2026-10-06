@@ -273,6 +273,7 @@ function playGuiIntro() {
   introRunning = true;
   const crt = $('crt'), app = $('app'), box = $('boot'), splash = $('splash');
   log('kernel: graphics adapter detected. installing graphical environment...', 'w');
+  Music.hold(true); // the music cuts out with the old screen
   crt.classList.add('glitch');
   setTimeout(() => {
     crt.classList.remove('glitch');
@@ -292,6 +293,7 @@ function playGuiIntro() {
         }
         box.classList.add('hidden');
         splash.classList.remove('hidden');
+        Music.chime();
         setTimeout(() => {
           splash.classList.add('hidden');
           crt.classList.remove('dos');
@@ -299,6 +301,7 @@ function playGuiIntro() {
           S.gui.on = true;
           introRunning = false;
           app.classList.remove('hidden');
+          Music.hold(false); // and the new era's track starts
           document.body.classList.add('gui-opening');
           renderGui(true);
           setTimeout(() => document.body.classList.remove('gui-opening'), 1600);

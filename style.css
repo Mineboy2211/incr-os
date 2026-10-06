@@ -121,6 +121,8 @@ html, body {
 }
 .newsbtn:focus-visible, .npbtn:focus-visible { outline: 1px dashed var(--fg); outline-offset: 2px; }
 .newsbtn.new::after { content: " *"; color: var(--warn); }
+.musicbtn { padding: 0 8px; }
+.musicbtn.off { opacity: 0.55; text-decoration: line-through; }
 .newsbtn.new[aria-expanded="true"]::after { color: inherit; }
 
 .newspanel {
