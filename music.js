@@ -181,25 +181,74 @@ const Music = (() => {
     if (track) echoDelay.delayTime.setValueAtTime((60 / track.bpm) * 0.75, ctx.currentTime);
   }
   function applyGain() {
-    if (!ctx) return;
+    if (!ctx || ctx.state === 'closed') return;
     const target = enabled && !hold ? volume * 0.55 : 0;
     master.gain.setTargetAtTime(target, ctx.currentTime, hold ? 0.12 : 0.4);
   }
 
-  document.addEventListener('visibilitychange', () => {
-    if (!ctx) return;
-    if (document.hidden) ctx.suspend();
-    else ctx.resume().then(() => { nextTime = ctx.currentTime + 0.05; });
+  // ---------------------------------------------------------------- stopping for real
+  // Phones keep a "closed" game alive in the background (app switch, closing a tab
+  // opened from another app...). Whenever the page is hidden, frozen or closing,
+  // everything stops: sequencer, volume, audio engine and the media notification.
+  let paused = false;
+  let onToggle = null; // the game's handler for the phone's media Play/Pause buttons
+  const setSession = type => { try { if (navigator.audioSession) navigator.audioSession.type = type; } catch (e) { /* unsupported */ } };
+  function mediaState(playing) {
+    const ms = navigator.mediaSession;
+    if (!ms) return;
+    try {
+      ms.playbackState = playing ? 'playing' : 'paused';
+      if (playing && window.MediaMetadata) {
+        ms.metadata = new MediaMetadata({ title: track === TRACKS.win1 ? 'Graphical Environment' : 'Phosphor', artist: 'INCR.OS' });
+      }
+    } catch (e) { /* unsupported */ }
+  }
+  function pauseAll() {
+    paused = true;
+    if (timer) { clearInterval(timer); timer = null; }
+    if (!ctx || ctx.state === 'closed') return;
+    master.gain.cancelScheduledValues(ctx.currentTime);
+    master.gain.setValueAtTime(0, ctx.currentTime);
+    ctx.suspend();
+    setSession('auto'); // don't keep the phone in "playing music" mode
+    mediaState(false);
+  }
+  function resumeAll() {
+    if (!ctx || ctx.state === 'closed' || document.hidden || !enabled) return;
+    paused = false;
+    setSession('playback');
+    ctx.resume().then(() => {
+      if (paused || document.hidden) return;
+      nextTime = ctx.currentTime + 0.05;
+      if (!timer) timer = setInterval(tick, 40);
+      applyGain();
+      mediaState(true);
+    });
+  }
+  document.addEventListener('visibilitychange', () => (document.hidden ? pauseAll() : resumeAll()));
+  document.addEventListener('freeze', pauseAll); // the browser is about to freeze the page
+  window.addEventListener('pagehide', e => {
+    pauseAll();
+    if (!e.persisted && ctx && ctx.state !== 'closed') ctx.close(); // the page is going away for good
   });
+  window.addEventListener('pageshow', e => { if (e.persisted) resumeAll(); });
+  if (navigator.mediaSession) {
+    for (const [action, on] of [['play', true], ['pause', false], ['stop', false]]) {
+      try { navigator.mediaSession.setActionHandler(action, () => onToggle && onToggle(on)); } catch (e) { /* unsupported */ }
+    }
+  }
 
   return {
     // call from a click / key press: browsers block audio until then
     unlock() {
+      if (document.hidden || !enabled) return;
       if (ctx && ctx.state === 'running' && timer) return; // already playing
+      if (ctx && ctx.state === 'closed') ctx = null;      // the page came back after closing it
       // iPhone: count as media playback, so the ring/silent switch doesn't mute it (Safari 17+)
-      try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* not supported */ }
+      setSession('playback');
       if (!ctx && !build()) return;
-      if (ctx.state !== 'running' && !document.hidden) {
+      paused = false;
+      if (ctx.state !== 'running') {
         ctx.resume();
         // mobile browsers fully unlock audio when a sound starts during the tap itself
         const blip = ctx.createBufferSource();
@@ -210,19 +259,26 @@ const Music = (() => {
       if (!timer) timer = setInterval(tick, 40);
       if (wanted) useTrack(wanted);
       applyGain();
+      mediaState(true);
     },
     // called every frame with the game's state; only acts on changes
     sync(name, on, vol) {
       wanted = name;
       const key = `${name}|${on}|${vol}`;
       if (key === lastKey) return;
+      const wasOn = enabled;
       lastKey = key;
       enabled = !!on;
       volume = Math.max(0, Math.min(100, vol)) / 100;
-      if (!ctx) return;
+      if (!ctx || ctx.state === 'closed') return;
       useTrack(name);
       applyGain();
+      // music turned off: fade out, then shut the engine down (no silent playback)
+      if (wasOn && !enabled) setTimeout(() => { if (!enabled) pauseAll(); }, 700);
+      if (!wasOn && enabled) resumeAll();
     },
+    // the game decides what the phone's media Play/Pause buttons do
+    onMediaButton(fn) { onToggle = fn; },
     // silence while the era transition plays, then pick up the new track
     hold(on) {
       hold = !!on;

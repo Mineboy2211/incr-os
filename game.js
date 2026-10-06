@@ -2122,6 +2122,8 @@ function init() {
   for (const type of ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown']) {
     window.addEventListener(type, unlockAudio, { passive: true });
   }
+  // the phone's media notification Play/Pause buttons act like the music button
+  Music.onMediaButton(on => { S.opts.music = on; if (on) Music.unlock(); });
   $('musicBtn').addEventListener('click', () => {
     S.opts.music = !S.opts.music;
     if (S.opts.music && S.opts.volume === 0) S.opts.volume = 40;
