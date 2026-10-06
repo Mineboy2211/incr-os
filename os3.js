@@ -592,6 +592,7 @@ function os3Build() {
       </div>
       <nav class="o3-icons" aria-label="programs">${WINS.map(w => `
         <button type="button" class="o3-icon" data-o3="open:${w.id}" id="o3i-${w.id}">${ICON_ART[w.id]}<span>${w.label}</span></button>`).join('')}
+        <button type="button" class="o3-icon o3-setup-icon hidden" data-o3="setup" id="o3SetupIcon"><i class="ic-glyph ic-setup">4.0</i><span>SETUP.EXE</span></button>
       </nav>
       <div id="o3Setup" class="o3-setup hidden" role="dialog" aria-label="INCR.OS 4.0 Setup">
         <div class="w3-title"><span class="w3-name">INCR.OS 4.0 Setup</span></div>
@@ -706,6 +707,7 @@ function os3Render() {
   $('o3Back4').classList.toggle('hidden', !S.os4.unlocked);
   const ready = setupReady();
   $('o3SetupBtn').classList.toggle('hidden', !ready);
+  $('o3SetupIcon').classList.toggle('hidden', !ready); // always on the desktop, even after "Later"
   $('o3Setup').classList.toggle('hidden', !ready || !!dlg || setupAsked || setupRunning);
 }
 

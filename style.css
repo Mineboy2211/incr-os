@@ -640,8 +640,8 @@ body.os3-mode .crt::before, body.os3-mode .crt::after { display: none; }
   width: 5.2em; padding: 2px; flex-shrink: 0;
 }
 .o3-icon > i {
-  width: 2.4em; height: 2.4em; display: grid; place-items: center;
-  background: #fff; border: 2px solid #000; color: #000; font-style: normal; font-size: 1.1em;
+  width: 40px; height: 40px; display: grid; place-items: center;
+  background: #fff; border: 2px solid #000; color: #000; font-style: normal; font-size: 18px;
 }
 .o3-icon span { padding: 0 3px; font-size: 0.9em; }
 .o3-icon.open span { background: #0000aa; }
@@ -656,7 +656,12 @@ body.os3-mode .crt::before, body.os3-mode .crt::after { display: none; }
 .ic-df b { flex: 1; height: 100%; background: #5555ff; }
 .ic-df b:nth-child(2) { background: #ff5555; }
 .ic-df b:nth-child(3) { background: #55ff55; }
-.o3-icon > i.ic-dos { background: #000; color: #aaa; font-size: 0.8em; }
+.o3-icon > i.ic-dos { background: #000; color: #aaa; font-size: 12px; }
+/* INCR.OS 4.0 is ready: its setup icon blinks until you run it */
+.o3-icon > i.ic-setup { background: #0000aa; color: #ffff55; font-size: 13px; font-weight: 600; animation: setup-blink 1s steps(1) infinite; }
+@keyframes setup-blink { 50% { background: #ffff55; color: #0000aa; } }
+.o3-setup-icon span { background: #0000aa; }
+@media (prefers-reduced-motion: reduce) { .o3-icon > i.ic-setup { animation: none; } }
 
 /* windows */
 .w3win {
