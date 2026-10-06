@@ -22,7 +22,7 @@ let guiBound = [];      // [element, kind, key, arg]
 let fmConfirmUntil = 0; // the Format button asks before wiping
 let guiWasOn = null;
 
-const guiOn = () => !!(S.gui && S.gui.on && S.gui.win1) && !os3On() && !os4On();
+const guiOn = () => !!(S.gui && S.gui.on && S.gui.win1) && !os3On() && !os4Live();
 const guiNarrow = () => !!(window.matchMedia && matchMedia('(max-width: 999px), (orientation: portrait)').matches);
 const pct = f => `${(Math.max(0, Math.min(1, f)) * 100).toFixed(1)}%`;
 
@@ -243,7 +243,7 @@ function guiAct(act) {
     case 'ach': openAchMenu(); break;
     case 'news': openNews('recent'); break;
     case 'os3back': os3Return(); break;
-    case 'os4back': os4Return(); break;
+    case 'os4back': if (has4()) os4Return(); break;
     case 'enter': playDoorIntro(); break;
     case 'help': setGuiTab('term'); runCommand('/help'); break;
     case 'tab': setGuiTab(a); break;

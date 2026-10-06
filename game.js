@@ -7,6 +7,7 @@
  * Beyond   past 1.79e308 bytes ("the door"), PATCHES bought with bytes lift a soft cap.
  * Goal     reach 1e1000 bytes and /patch the-door.
  * Then     INCR.OS 3.0 (os3.js): bytes run themselves, the new resource is pixels.
+ * Then     INCR.OS 4.0 (os4.js): a modem, 640K of memory, and the resource is signal.
  *
  * Bytes, process amounts and production are L numbers (log10 of the value, see
  * big.js) so they can pass Number.MAX_VALUE. Kernels and cores stay plain numbers.
@@ -121,6 +122,14 @@ const ACH = [
   { id: 'a26', name: 'Total recall',     desc: 'Win a game of Memory.',         check: () => S.os3.wins.mm > 0 },
   { id: 'a27', name: 'Full palette',     desc: 'Own all 16 colors.',            check: () => COLORS.every((_, i) => ownColor(i)) },
   { id: 'a28', name: 'Self-portrait',    desc: 'Save the 6th picture.',         check: () => S.os3.pics >= PICTURES.length },
+  { id: 'a29', name: 'Setup complete',   desc: 'Install INCR.OS 4.0.',          check: () => S.os4.unlocked },
+  { id: 'a30', name: 'Handshake',        desc: 'Make your first call.',         check: () => S.os4.conns >= 1 },
+  { id: 'a31', name: 'Conventional memory', desc: 'Run 6 programs at once.',    check: () => [...PROGS, ...HELPERS].filter(p => running4(p.id)).length >= 6 },
+  { id: 'a32', name: 'Patience',         desc: 'Win a game of Solitaire.',      check: () => S.os4.wins.sol > 0 },
+  { id: 'a33', name: 'Corners',          desc: 'Beat the voice at Reversi.',    check: () => S.os4.wins.rev > 0 },
+  { id: 'a34', name: 'Clean boot',       desc: 'Hold off worm.exe in Antivirus.', check: () => S.os4.wins.av > 0 },
+  { id: 'a35', name: 'Flying daemons',   desc: 'Let the screensaver run 5 minutes.', check: () => S.os4.saverTime >= 300 },
+  { id: 'a36', name: 'Line 1',           desc: 'Answer the question.',          check: () => !!S.os4.line },
 ];
 
 // ---------------------------------------------------------------- state
@@ -159,6 +168,7 @@ function newState() {
     tut: { step: 0, done: false, f: {} },
     gui: { on: true, win1: false, declined: false }, // graphical environment (first reboot); declined = said no to it
     os3: os3Fresh(), // INCR.OS 3.0, behind the door
+    os4: os4Fresh(), // INCR.OS 4.0, after the last picture
     stats: {
       played: 0, thisReboot: 0, thisFormat: 0,
       reboots: 0, formats: 0, fastestReboot: null,
@@ -316,7 +326,7 @@ function step(dt) {
   }
   addBytes(outL(0) + ldt);
 
-  if (!bgSim) { S.stats.played += dt; os3Step(dt); }
+  if (!bgSim) { S.stats.played += dt; os3Step(dt); os4Step(dt); }
   S.stats.thisReboot += dt;
   S.stats.thisFormat += dt;
 
@@ -1255,6 +1265,7 @@ const COMMANDS = [
   { name: 'door', desc: 'live progress toward 1e1000 bytes', when: () => S.stats.overflowed, run: () => liveBlock(doorView) },
   { name: 'enter', desc: 'step through the door', when: () => S.won && !S.os3.unlocked, run: playDoorIntro },
   { name: 'win3', desc: 'go back to INCR.OS 3.0', when: () => S.os3.unlocked && !S.os3.on, run: os3Return },
+  { name: 'win4', desc: 'go back to INCR.OS 4.0', when: () => S.os4.unlocked && !S.os4.on, run: os4Return },
   // answers to a pending question (/reboot, /format...): only exist while it waits
   { name: 'yes', temp: true, desc: 'confirm', when: () => !!pending, run: () => answer(true) },
   { name: 'no', temp: true, desc: 'cancel', when: () => !!pending, run: () => answer(false) },
@@ -1403,6 +1414,8 @@ const ACH_PROGRESS = {
   a23: () => S.os3.painted / picGoal(0),
   a27: () => Object.keys(S.os3.colors).length / COLORS.length,
   a28: () => S.os3.pics / PICTURES.length,
+  a30: () => S.os4.toward / CONNS[0].goal,
+  a35: () => S.os4.saverTime / 300,
 };
 const ACH_FILTERS = ['all', 'unlocked', 'locked'];
 let achMenu = null; // { filter, sel, count } while open
@@ -1812,6 +1825,7 @@ function sanitize(raw) {
   if (!s.tut.f || typeof s.tut.f !== 'object') s.tut.f = {};
   if (!s.gui || typeof s.gui !== 'object') s.gui = { on: true, win1: false };
   s.os3 = os3Clean(s.os3);
+  s.os4 = os4Clean(s.os4);
   delete s.gui.intro; // v0.5's green desktop: everyone sees the new install once
   return s;
 }
@@ -2003,7 +2017,8 @@ function render() {
   renderConfirm();
   renderGui();
   os3Render();
-  Music.sync(os3On() ? 'os3' : guiOn() ? 'win1' : 'terminal', S.opts.music, S.opts.volume);
+  os4Render();
+  Music.sync(os4On() ? S.os4.track : os3On() ? 'os3' : guiOn() ? 'win1' : 'terminal', S.opts.music, S.opts.volume);
   const mb = $('musicBtn');
   mb.classList.toggle('off', !S.opts.music);
   mb.setAttribute('aria-pressed', String(!!S.opts.music));
@@ -2121,7 +2136,7 @@ function logicTick() {
   saveAcc += dt;
   if (saveAcc >= 10) { saveAcc = 0; save(true); }
   // no random events on the other side of the door
-  if (!os3On()) eventTick();
+  if (!os3On() && !os4On()) eventTick();
   else if (ev) { ev = null; scheduleEvent(); }
   confirmTick();
 }
@@ -2134,6 +2149,7 @@ function init() {
   wireAchMenu();
   wireGui();
   wireOs3();
+  wireOs4();
   // Browsers only start audio from a "real" gesture. On touch screens that's the
   // finger lifting (touchend / pointerup / click), not touching down.
   const unlockAudio = () => Music.unlock();

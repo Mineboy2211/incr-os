@@ -206,7 +206,12 @@ function os3Clean(o) {
   o.on = o.unlocked && o.on !== false;
   return o;
 }
-const os3On = () => !!(S.os3 && S.os3.unlocked && S.os3.on) && !os4On();
+// INCR.OS 4.0 lives in os4.js. These checks don't crash if a browser still has an
+// older os4.js or game.js cached (no S.os4 yet): 3.0 then simply works without it.
+const has4 = () => typeof os4On === 'function' && !!S.os4;
+const os4Live = () => has4() && os4On();
+const setup4Busy = () => has4() && setupRunning;
+const os3On = () => !!(S.os3 && S.os3.unlocked && S.os3.on) && !os4Live();
 
 // ---------------------------------------------------------------- formulas
 const ownColor = i => !!S.os3.colors[i];
@@ -248,7 +253,7 @@ function os3Step(dt) {
   if (!S.os3.unlocked) return;
   addPx(pxRate() * dt);
   // over here the bytes run themselves
-  if (os3On() || os4On()) {
+  if (os3On() || os4Live()) {
     os3AutoAcc += dt;
     if (os3AutoAcc >= 1) { os3AutoAcc = 0; maxAll(); }
   }
@@ -692,7 +697,7 @@ function os3Render() {
     $('os3').classList.toggle('hidden', !on);
     document.body.classList.toggle('os3-mode', on);
     if (on) { os3Build(); os3Layout(); }
-    else if (!introRunning && !os4On() && !setupRunning) $('app').classList.remove('hidden');
+    else if (!introRunning && !os4Live() && !setup4Busy()) $('app').classList.remove('hidden');
   }
   if (!on) return;
   os3Lists();
@@ -704,11 +709,11 @@ function os3Render() {
   $('o3Music').classList.toggle('off', !S.opts.music);
   if (!dlg && S.os3.chapter <= S.os3.pics && S.os3.chapter < CHAPTERS.length) startChapter(S.os3.chapter);
   // after the last memory: INCR.OS 4.0 setup
-  $('o3Back4').classList.toggle('hidden', !S.os4.unlocked);
-  const ready = setupReady();
+  $('o3Back4').classList.toggle('hidden', !(has4() && S.os4.unlocked));
+  const ready = has4() && setupReady();
   $('o3SetupBtn').classList.toggle('hidden', !ready);
   $('o3SetupIcon').classList.toggle('hidden', !ready); // always on the desktop, even after "Later"
-  $('o3Setup').classList.toggle('hidden', !ready || !!dlg || setupAsked || setupRunning);
+  $('o3Setup').classList.toggle('hidden', !ready || !!dlg || setupAsked || setup4Busy());
 }
 
 // little "+12" that floats up from where you clicked
@@ -742,9 +747,9 @@ function os3Act(act) {
     case 'mm': mmClick(i); miniDraw('mm'); break;
     case 'mmnew': clearTimeout(mmTimer); mmNew(); miniDraw('mm'); break;
     case 'visit': os3Visit(a); break;
-    case 'setup': playSetup(); break;
+    case 'setup': if (has4()) playSetup(); break;
     case 'setuplater': setupAsked = true; break;
-    case 'os4back': os4Return(); break;
+    case 'os4back': if (has4()) os4Return(); break;
     case 'ach': openAchMenu(); break;
     case 'music': $('musicBtn').click(); break;
   }

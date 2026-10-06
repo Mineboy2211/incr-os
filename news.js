@@ -7,10 +7,19 @@
  * To ship a version: add an entry at the TOP of UPDATES and bump VERSION.
  */
 
-const VERSION = 'v0.7';
+const VERSION = 'v0.8';
 
 // newest first
 const UPDATES = [
+  { v: 'v0.8', notes: [
+    'INCR.OS 4.0: save the last picture in 3.0 and the voice rewrites itself. new resource: signal.',
+    'a modem to dial out, six numbers to call, and the end of the story so far.',
+    'only 640K of memory: choose which programs run, then buy RAM.',
+    'Solitaire (yes, the bouncing cards), Reversi against the voice, and Antivirus against worm.exe.',
+    'a screensaver that earns a bonus while you are away, and a Media Player with 7 tracks to browse, 4 of them new.',
+    'the last picture of 3.0 now needs a lot fewer pixels.',
+    '8 new achievements.',
+  ] },
   { v: 'v0.7', notes: [
     'the door opens. apply the-door patch and walk through it: INCR.OS 3.0 is on the other side.',
     'a new resource, pixels: paint the canvas, buy tools and colors, save pictures to remember what happened.',
@@ -121,6 +130,8 @@ const NEWS = [
   { cat: 'news', when: () => S.stats.overflowed && !S.won, text: 'SYSTEM OVERFLOW confirmed, yet the counter keeps going. physicists "have questions".' },
   { cat: 'news', when: () => S.won, text: 'someone went through the door. they left the light on.' },
   { cat: 'news', when: () => S.os3.unlocked, text: 'local process takes up painting. critics call it "derivative of 1987".' },
+  { cat: 'news', when: () => S.os4.unlocked, text: 'phone bill for incr-7 reaches record high. nobody remembers making the calls.' },
+  { cat: 'news', when: () => S.os4.conns >= 4, text: 'thousands of machines report the same thing: "mine asked me a question."' },
   { cat: 'news', when: () => S.os3.unlocked && !S.os3.on, text: 'tourist from INCR.OS 3.0 spotted in the old eras. "just visiting," they insist.' },
   { cat: 'news', when: () => S.machine !== 'incr-7', text: () => `user spotted logged into ${S.machine}. incr-7 "feels a bit lonely".` },
   { cat: 'news', when: () => S.skin !== 'default', text: () => `fashion report: processes now dress as ${S.skin}. critics divided.` },
