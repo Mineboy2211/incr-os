@@ -569,12 +569,15 @@ function os3Build() {
   $('os3').innerHTML = `
     <header class="o3-bar">
       <b class="o3-logo">INCR.OS 3.0</b>
-      <span class="o3-stat"><span class="dim">PIXELS</span> <b data-x="px"></b> <span class="dim" data-x="rate"></span></span>
-      <span class="o3-stat"><span class="dim">PICTURES</span> <b data-x="pics"></b></span>
-      <span class="o3-stat o3-bytes"><span class="dim">BYTES</span> <span data-x="bytes"></span> <span class="dim">(automated)</span></span>
-      <span class="o3-gap"></span>
-      <button type="button" class="gbtn" data-o3="ach">Achievements</button>
-      <button type="button" class="gbtn" data-o3="music" id="o3Music" aria-label="Music on/off">&#9835;</button>
+      <div class="o3-stats">
+        <span class="o3-stat"><span class="dim">PIXELS</span> <b data-x="px"></b> <span class="dim" data-x="rate"></span></span>
+        <span class="o3-stat"><span class="dim">PICTURES</span> <b data-x="pics"></b></span>
+        <span class="o3-stat o3-bytes"><span class="dim">BYTES</span> <span data-x="bytes"></span> <span class="dim">(automated)</span></span>
+      </div>
+      <div class="o3-btns">
+        <button type="button" class="gbtn" data-o3="ach">Achievements</button>
+        <button type="button" class="gbtn" data-o3="music" id="o3Music" aria-label="Music on/off">&#9835;</button>
+      </div>
     </header>
     <div class="o3-desk">
       <div class="o3-wins" id="o3Wins">${WINS.map(w => `

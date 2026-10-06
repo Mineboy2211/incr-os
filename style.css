@@ -597,14 +597,23 @@ body.os3-mode .crt::before, body.os3-mode .crt::after { display: none; }
 .os3 .dim { color: #555; }
 
 /* menu bar along the top */
+/* a fixed grid, so changing numbers never make it wrap differently (that
+   resized the desktop, and every tall window with it) */
 .o3-bar {
-  display: flex; align-items: center; gap: 4px 16px; flex-wrap: wrap;
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 4px 16px;
   background: #fff; border-bottom: 2px solid #000;
   padding: 4px 10px;
 }
-.o3-logo { color: #0000aa; font-size: 1.15em; }
+.o3-logo { color: #0000aa; font-size: 1.15em; white-space: nowrap; }
+.o3-stats { display: flex; gap: 16px; min-width: 0; overflow: hidden; white-space: nowrap; }
+.o3-stat { flex-shrink: 0; }
+.o3-stat.o3-bytes { flex-shrink: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .o3-stat b { font-size: 1.1em; }
-.o3-gap { flex: 1; }
+.o3-btns { display: flex; gap: 4px; }
+@media (max-width: 700px) {
+  .o3-bar { grid-template-columns: minmax(0, 1fr) auto; }
+  .o3-stats { grid-column: 1 / -1; grid-row: 2; }
+}
 
 /* buttons: white, black border, a gray lower-right edge; inverted when pressed */
 .os3 .gbtn {
@@ -676,7 +685,13 @@ body.os3-mode .crt::before, body.os3-mode .crt::after { display: none; }
   background: #aaa; color: #000; border: 2px solid #000; padding: 0;
 }
 .w3-sys::before { content: ""; display: block; width: 60%; height: 3px; margin: 0 auto; background: #fff; border: 1px solid #000; }
-.w3-body { overflow: auto; padding: 8px 10px; min-height: 0; }
+.w3-body { overflow: hidden auto; scrollbar-gutter: stable; padding: 8px 10px; min-height: 0; }
+/* lines whose text changes all the time stay on one line, so windows never change height */
+.w3-body [data-x="paintinfo"], .w3-body [data-x="click"], .t-info [data-x^="tr:"], .mini-reward {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.t-info [data-x^="tr:"] { display: block; }
+.t-btns .gbtn:first-child { min-width: 8.6em; }
 .w3-body p { margin: 4px 0; }
 body.os3-opening .w3win:not(.hidden) { animation: win-open 0.35s steps(4) both; }
 
@@ -687,7 +702,7 @@ body.os3-opening .w3win:not(.hidden) { animation: win-open 0.35s steps(4) both; 
 .os3.narrow .o3-bytes { display: none; }
 
 /* Paint */
-.paint-wrap { position: relative; }
+.paint-wrap { position: relative; overflow: hidden; } /* the +1 floaters stay inside */
 #o3Canvas {
   display: block; width: 100%; aspect-ratio: 3 / 2; height: auto;
   image-rendering: pixelated; image-rendering: crisp-edges;
