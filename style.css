@@ -303,7 +303,10 @@ body.gui-mode :is(.gbtn, .newsbtn, .npbtn, .keys button) {
   padding: 1px 12px;
   text-shadow: none; box-shadow: none;
 }
-body.gui-mode :is(.gbtn, .newsbtn, .npbtn, .keys button):hover:not(:disabled) { background: #fff; outline: 1px dotted #000; outline-offset: -5px; }
+/* hover only on real mice: a tap on a phone leaves the button "hovered" */
+@media (hover: hover) {
+  body.gui-mode :is(.gbtn, .newsbtn, .npbtn, .keys button):hover:not(:disabled):not(.on):not([aria-expanded="true"]) { background: #fff; outline: 1px dotted #000; outline-offset: -5px; }
+}
 body.gui-mode :is(.gbtn, .newsbtn, .npbtn, .keys button):active:not(:disabled),
 body.gui-mode :is(.gbtn, .npbtn).on,
 body.gui-mode .newsbtn[aria-expanded="true"] { background: #000; color: #fff; outline: none; transform: none; }
@@ -427,6 +430,8 @@ body.gui-mode .keys button { font-family: "Pixelify Sans", Tahoma, Arial, sans-s
 }
 .meter i { display: block; height: 100%; width: 0; background: var(--ega-blue); }
 .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* the text next to a bar reserves a fixed width, so it never hops between lines as its digits change */
+.row > .dim, .p-bar > .dim { flex: 1 1 12em; min-width: 0; }
 
 /* ---------- System window ---------- */
 .sec { border: 2px solid #000; border-radius: 6px; margin: 2px 0 10px; padding: 4px 10px 8px; }
@@ -443,8 +448,12 @@ body.gui-mode .keys button { font-family: "Pixelify Sans", Tahoma, Arial, sans-s
 .ubtn .u-name { font-weight: 600; }
 .ubtn .u-desc { color: var(--ega-dgray); font-size: 0.88em; }
 .ubtn .u-cost { font-size: 0.9em; color: var(--ega-blue); }
-.ubtn:hover:not(:disabled) { background: #000; color: #fff; }
-.ubtn:hover:not(:disabled) :is(.u-desc, .u-cost) { color: #fff; }
+@media (hover: hover) {
+  .ubtn:hover:not(:disabled) { background: #000; color: #fff; }
+  .ubtn:hover:not(:disabled) :is(.u-desc, .u-cost) { color: #fff; }
+}
+.ubtn:active:not(:disabled) { background: #000; color: #fff; }
+.ubtn:active:not(:disabled) :is(.u-desc, .u-cost) { color: #fff; }
 .ubtn:disabled { color: var(--ega-gray); border-color: var(--ega-dgray); cursor: not-allowed; }
 .ubtn:disabled .u-cost { color: var(--ega-gray); }
 .ubtn.owned { border-style: dotted; color: #000; }

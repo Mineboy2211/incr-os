@@ -14,6 +14,7 @@ const UPDATES = [
   { v: 'v0.6', notes: [
     'music! each era has its own track, synthesized live: "Phosphor" for the terminal, "Graphical Environment" for INCR.OS 2.0.',
     'the note button next to NEWS turns it on or off. /sys volume 0-100 sets how loud.',
+    'fix (phones): progress text no longer flickers between lines, and tapped buttons keep their text.',
   ] },
   { v: 'v0.5', notes: [
     'your first REBOOT installs INCR.OS 2.0: a whole graphical environment with windows, menus and buttons.',
