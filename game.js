@@ -146,6 +146,7 @@ function newState() {
     skin: 'default',
     rename: {},  // tier index -> custom name
     tut: { step: 0, done: false, f: {} },
+    gui: { on: true, win1: false, declined: false }, // graphical environment (first reboot); declined = said no to it
     stats: {
       played: 0, thisReboot: 0, thisFormat: 0,
       reboots: 0, formats: 0, fastestReboot: null,
@@ -532,6 +533,7 @@ function appendLine(msg, cls, prefix) {
   box.append(line);
   trimLog(box);
   stickBottom(box);
+  noteTermOutput();
 }
 // timestamped system event
 function log(msg, cls) {
@@ -731,6 +733,7 @@ const EVENTS = [
     miss: 'packet dropped.' },
   { id: 'turbo', cmd: 'turbo', secs: 15, weight: 2, when: () => S.stats.highestTier >= 2,
     start: () => ({ text: 'thermal headroom detected. type /turbo within 15s for x5 production (60s)' }),
+    short: 'thermal headroom: x5 production for 60s.',
     resolve: () => { S.buffs.turboUntil = S.stats.played + 60; out('TURBO engaged: x5 production for 60s.', 'ok'); },
     miss: 'thermal window closed.' },
   { id: 'orphan', cmd: 'recover', secs: 15, weight: 2, when: () => S.stats.reboots > 0,
@@ -774,7 +777,10 @@ function displayPath(p) {
   const s = '/' + p.join('/');
   return s === '/home/user' || s.startsWith('/home/user/') ? '~' + s.slice(10) : s;
 }
-const promptText = () => `root@${S.machine}:${displayPath(cwd)}$`;
+// in the graphical environment the terminal is a DOS window: INCR-7 C:HOMEUSER>
+const promptText = () => (guiOn()
+  ? `${S.machine.toUpperCase()} C:\\${cwd.join('\\').toUpperCase()}>`
+  : `root@${S.machine}:${displayPath(cwd)}$`);
 function setPrompt() { const el = document.querySelector('.prompt span'); if (el) el.textContent = promptText(); }
 function resolvePath(str) {
   if (!str || str === '~') return [...HOME];
@@ -869,10 +875,12 @@ function cmdChallenge([sub, id]) {
   if (!c || !chalOpen(c)) return out('usage: /challenge start <id>. see /challenge', 'w');
   if (chalDone(c.id)) return out(`${c.id} is already beaten.`, 'dim');
   if (S.chal.active) return out(`already in '${S.chal.active}'. /challenge exit first.`, 'w');
-  if (!confirmArm('chal-' + c.id)) return out('this restarts your current run (no kernels). type the command again to confirm.', 'w');
-  S.chal.active = c.id;
-  resetRun();
-  log(`challenge '${c.id}' started: ${c.desc} goal: ${fmtL(c.goalL)} bytes.`, 'w');
+  askConfirm(`challenge ${c.id}`, 'this restarts your current run (no kernels).', () => {
+    if (S.chal.active) return;
+    S.chal.active = c.id;
+    resetRun();
+    log(`challenge '${c.id}' started: ${c.desc} goal: ${fmtL(c.goalL)} bytes.`, 'w');
+  });
 }
 
 // ---------------------------------------------------------------- aliases
@@ -1187,6 +1195,8 @@ const COMMANDS = [
   { name: 'stats', desc: 'live statistics', when: () => S.stats.highestTier >= 2, run: () => liveBlock(statsView) },
   { name: 'ach', args: '[list]', desc: 'achievements menu (/ach list for plain text)', when: () => achCount() > 0,
     run: ([sub]) => (sub === 'list' || QUIET ? cmdAch() : openAchMenu()) },
+  { name: 'upgrade', desc: 'install INCR.OS 2.0 (the graphical environment)',
+    when: () => S.stats.reboots > 0 && !S.gui.win1, run: startUpgrade },
   { name: 'tutorial', args: '[skip]', desc: 'show, skip or replay the tutorial', when: () => true, run: cmdTutorial },
   { name: 'reboot', desc: `reset your run for KERNELS at ${fmtL(REBOOT_L)} bytes`,
     when: () => S.stats.bestBytes >= 9 || S.stats.reboots > 0, run: cmdReboot },
@@ -1223,6 +1233,9 @@ const COMMANDS = [
   { name: 'patches', desc: 'list patches (upgrades past the door)', when: () => S.stats.overflowed, run: cmdPatches },
   { name: 'patch', args: '<name>', desc: 'apply a patch, paid in bytes', when: () => S.stats.overflowed, run: cmdPatch },
   { name: 'door', desc: 'live progress toward 1e1000 bytes', when: () => S.stats.overflowed, run: () => liveBlock(doorView) },
+  // answers to a pending question (/reboot, /format...): only exist while it waits
+  { name: 'yes', temp: true, desc: 'confirm', when: () => !!pending, run: () => answer(true) },
+  { name: 'no', temp: true, desc: 'cancel', when: () => !!pending, run: () => answer(false) },
   // event responses: only exist while their event is active
   ...EVENTS.map(e => ({ name: e.cmd, temp: true, desc: 'respond to the current event',
     when: () => !!ev && ev.def === e, run: resolveEvent })),
@@ -1301,6 +1314,7 @@ function cmdHelp([name]) {
   out('available commands:');
   const narrow = $('log').clientWidth < 600;
   if (ev) out(`  active event: /${ev.def.cmd}`, 'w');
+  if (pending) out(`  waiting for an answer: /yes or /no`, 'w');
   for (const c of list) {
     if (c.temp) continue;
     const usage = '/' + c.name + (c.args ? ' ' + c.args : '');
@@ -1454,15 +1468,16 @@ function wireAchMenu() {
   });
 }
 
-function cmdReboot() {
+function cmdReboot([sure]) {
   const gain = rebootGain();
   if (gain < 1) return liveBlock(rebootView);
-  if (S.stats.reboots === 0 && !confirmArm('reboot')) {
-    out(`this wipes your bytes, processes and clock for +${fmt(gain)} kernel(s).`, 'w');
-    return out('type /reboot again to confirm.', 'w');
-  }
-  doReboot(QUIET); // reboots from scripts stay quiet
-  if (S.stats.reboots === 1) out('kernels boost production forever. try /modules.', 'ok');
+  const go = () => {
+    if (!doReboot(QUIET)) return out('nothing to reboot for anymore.', 'dim'); // scripts stay quiet
+    if (S.stats.reboots === 1) out('kernels boost production forever. try /modules.', 'ok');
+  };
+  // scripts and "/reboot yes" skip the question
+  if (QUIET || sure === 'yes' || sure === '-y') return go();
+  askConfirm('reboot', `this wipes your bytes, processes and clock for +${fmt(gain)} kernel(s).`, go);
 }
 
 function listUpgrades(list, owned, unit, have) {
@@ -1526,12 +1541,10 @@ function cmdUptime() {
 function cmdFormat() {
   const gain = formatGain();
   if (gain < 1) return liveBlock(formatView);
-  if (!confirmArm('format')) {
-    out(`this erases kernels, kernel modules and compression for +${fmt(gain)} core(s).`, 'w');
-    return out('type /format again to confirm.', 'w');
-  }
-  doFormat();
-  if (S.stats.formats === 1) out('cores boost everything. try /firmware.', 'ok');
+  askConfirm('format', `this erases kernels, kernel modules and compression for +${fmt(gain)} core(s).`, () => {
+    if (!doFormat()) return out('nothing to format for anymore.', 'dim');
+    if (S.stats.formats === 1) out('cores boost everything. try /firmware.', 'ok');
+  });
 }
 function cmdWatchdog([n]) {
   if (n !== undefined) {
@@ -1552,6 +1565,7 @@ function cmdSys([what, arg]) {
       out(`  flicker    ${o.flicker ? 'on ' : 'off'}          /sys flicker`);
       out(`  notation   ${o.notation}          /sys notation`);
       out(`  touch keys ${pad(o.keys, 12)} /sys keys <auto|on|off>`);
+      if (S.gui.win1) out(`  graphics   ${S.gui.on ? 'on ' : 'off'}          /sys gui <on|off>`);
       out('  /sys save · /sys export · /sys import <code> · /sys reset', 'dim');
       return;
     case 'theme':
@@ -1579,8 +1593,16 @@ function cmdSys([what, arg]) {
       catch (e) { out('could not read that save code.', 'w'); }
       return;
     case 'reset':
-      if (!confirmArm('reset')) return out('this ERASES ALL PROGRESS. type /sys reset again to confirm.', 'w');
-      return hardReset();
+      return askConfirm('reset', 'this ERASES ALL PROGRESS, on every machine. there is no undo.', hardReset);
+    case 'gui':
+      if (!S.gui.win1) {
+        if (S.stats.reboots === 0) return out('locked. reboot once first.', 'dim');
+        if (arg === 'on') return startUpgrade();
+        return out('INCR.OS 2.0 is not installed. /upgrade installs it.', 'dim');
+      }
+      if (!['on', 'off'].includes(arg)) return out('usage: /sys gui <on|off>  (the graphical environment)', 'w');
+      S.gui.on = arg === 'on';
+      return out(`graphical environment ${arg}.`);
     default:
       return out(`unknown setting: ${what}. type /sys`, 'w');
   }
@@ -1627,7 +1649,7 @@ function complete(inp) {
     else if (name === 'patch') pool = PATCHES.filter(u => !hasP(u.id)).map(u => u.key);
     else if (name === 'tutorial') pool = ['skip'];
     else if (name === 'ach') pool = ['list'];
-    else if (name === 'sys') pool = ['theme', 'scanlines', 'flicker', 'notation', 'keys', 'save', 'export', 'import', 'reset'];
+    else if (name === 'sys') pool = ['theme', 'scanlines', 'flicker', 'notation', 'keys', 'gui', 'save', 'export', 'import', 'reset'];
     else return;
   }
   applyCompletion(inp, base, pool, prefix);
@@ -1643,13 +1665,51 @@ function applyCompletion(inp, base, pool, prefix) {
   }
 }
 
-// type the same destructive command twice within 10s to confirm
-const armed = {};
-function confirmArm(key) {
-  const now = Date.now();
-  if (armed[key] && now - armed[key] < 10000) { delete armed[key]; return true; }
-  armed[key] = now;
-  return false;
+// Destructive commands ask first: answer /yes or /no within 10 seconds (the bar
+// above the prompt shows the countdown and has YES/NO buttons for touch screens).
+const CONFIRM_SECS = 10;
+let pending = null; // { label, action, until }
+// onNo (optional) runs on /no and when time runs out
+function askConfirm(label, detail, action, secs = CONFIRM_SECS, onNo = null) {
+  pending = { label, action, onNo, until: Date.now() + secs * 1000 };
+  out(detail, 'w');
+  out(`${label}? type /yes or /no (${secs}s)`, 'w');
+}
+function answer(yes) {
+  const p = pending;
+  pending = null;
+  if (!p) return;
+  if (yes) p.action();
+  else if (p.onNo) p.onNo();
+  else out(`${p.label} cancelled.`, 'dim');
+}
+function confirmTick() {
+  if (pending && Date.now() >= pending.until) {
+    const p = pending;
+    pending = null;
+    if (p.onNo) p.onNo();
+    else log(`no answer: ${p.label} cancelled.`, 'dim');
+  }
+}
+
+// ---------------------------------------------------------------- upgrade offer
+// Saves that rebooted before INCR.OS 2.0 existed get asked instead of having the
+// new look forced on them. New players get the transition on their first reboot.
+let upgradeOffer = false; // the question is on screen
+function offerUpgrade() {
+  upgradeOffer = true;
+  askConfirm('install INCR.OS 2.0',
+    'INCR.OS 2.0 is available: a whole new graphical environment, with windows, menus and buttons.',
+    startUpgrade, 60, () => {
+      upgradeOffer = false;
+      S.gui.declined = true;
+      out('staying on the terminal. type /upgrade whenever you want INCR.OS 2.0.', 'dim');
+    });
+}
+function startUpgrade() {
+  upgradeOffer = false;
+  S.gui.declined = false;
+  playGuiIntro();
 }
 
 // ---------------------------------------------------------------- save / load
@@ -1711,6 +1771,8 @@ function sanitize(raw) {
   if (!s.rename || typeof s.rename !== 'object') s.rename = {};
   if (!s.patches || typeof s.patches !== 'object') s.patches = {};
   if (!s.tut.f || typeof s.tut.f !== 'object') s.tut.f = {};
+  if (!s.gui || typeof s.gui !== 'object') s.gui = { on: true, win1: false };
+  delete s.gui.intro; // v0.5's green desktop: everyone sees the new install once
   return s;
 }
 function save(silent) {
@@ -1751,6 +1813,7 @@ function hardReset() {
   applyOpts();
   $('log').innerHTML = '';
   live.clear();
+  pending = null;
   ev = null;
   scheduleEvent();
   cwd = [...HOME];
@@ -1872,6 +1935,15 @@ function fitViewport() {
 
 function setText(el, s) { if (el && el._t !== s) { el.textContent = s; el._t = s; } }
 
+// the question bar above the prompt: label, countdown, YES / NO
+function renderConfirm() {
+  const bar = $('confirmBar');
+  bar.classList.toggle('hidden', !pending);
+  if (!pending) return;
+  const secs = Math.max(0, Math.ceil((pending.until - Date.now()) / 1000));
+  setText($('confirmText'), `${pending.label.toUpperCase()}? /yes or /no  ${secs}s`);
+}
+
 function render() {
   setText($('points'), fmtL(S.bytes));
   setText($('pps'), fmtL(bpsL()));
@@ -1888,6 +1960,8 @@ function render() {
     if (achMenu.count !== achCount()) renderAchMenu(); // something unlocked while open
     else renderAchDetail(); // keeps the progress bar moving
   }
+  renderConfirm();
+  renderGui();
   checkTutorial();
   const obj = $('objective');
   obj.classList.toggle('hidden', S.tut.done);
@@ -2002,6 +2076,7 @@ function logicTick() {
   saveAcc += dt;
   if (saveAcc >= 10) { saveAcc = 0; save(true); }
   eventTick();
+  confirmTick();
 }
 
 function init() {
@@ -2010,6 +2085,7 @@ function init() {
   wireInput();
   wireNews();
   wireAchMenu();
+  wireGui();
 
   checkCommands(true); // what the save already had is not "new"
 
@@ -2033,6 +2109,7 @@ function init() {
     playNews();
     if (!hadSave) out('new here? follow the TUTORIAL line above the prompt.', 'dim');
     if (offline) reportBox('WHILE YOU WERE AWAY', offline.sec, offline.before, offline.after);
+    if (hadSave && S.stats.reboots > 0 && !S.gui.win1 && !S.gui.declined) offerUpgrade();
     $('cmd').focus();
     lastLogic = Date.now();
     setInterval(() => { logicTick(); render(); }, 50);

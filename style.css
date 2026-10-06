@@ -167,8 +167,11 @@ html, body {
 /* interactive menus (achievements) drawn over the terminal */
 .term { position: relative; }
 .menu {
-  position: absolute; inset: 6px 0 0 0;
-  z-index: 15;
+  position: fixed;
+  top: 7vh; bottom: 7vh; left: 50%;
+  transform: translateX(-50%);
+  width: min(1000px, calc(100vw - 24px));
+  z-index: 40;
   display: flex; flex-direction: column; gap: 6px;
   background: var(--bg);
   border: 1px solid var(--fg);
@@ -248,4 +251,313 @@ html, body {
   .boot { max-width: none; padding: 24px 22px; }
   .logo { display: block; }
   .am-grid { grid-template-columns: repeat(auto-fill, minmax(10em, 1fr)); }
+}
+
+/* =====================================================================
+   INCR.OS 2.0 GRAPHICAL ENVIRONMENT (after the first reboot)
+   Mid-80s desktop: EGA colors, tiled windows, blue title bars, menu bars,
+   rounded push buttons, a dithered desktop. No more green phosphor.
+   ===================================================================== */
+.term-title, .win-menu { display: none; }
+
+body.gui-mode {
+  --ega-blue: #0000aa;
+  --ega-gray: #aaaaaa;
+  --ega-dgray: #555555;
+  --ega-cyan: #00aaaa;
+  --ega-yellow: #ffff55;
+  font-family: "Pixelify Sans", "MS Sans Serif", Tahoma, Arial, sans-serif;
+  font-size: 0.86em;
+  color: #000;
+}
+body.gui-mode .crt {
+  background: repeating-conic-gradient(#aaaaaa 0 25%, #9a9a9a 0 50%) 0 0 / 4px 4px;
+  text-shadow: none;
+  animation: none;
+}
+body.gui-mode .crt::before, body.gui-mode .crt::after { display: none; }
+body.gui-mode .app { max-width: 1500px; padding: 8px 10px; }
+body.gui-mode .dim { color: var(--ega-dgray); }
+body.gui-mode * { scrollbar-color: #000 var(--ega-gray); }
+body.gui-mode ::-webkit-scrollbar { width: 14px; height: 14px; }
+body.gui-mode ::-webkit-scrollbar-track { background: var(--ega-gray); border-left: 2px solid #000; }
+body.gui-mode ::-webkit-scrollbar-thumb { background: #fff; border: 2px solid #000; }
+
+/* ---------- push buttons: white, black border, rounded; inverted when pressed ---------- */
+.gbtn {
+  font: inherit; text-shadow: inherit;
+  background: transparent; color: var(--fg);
+  border: 1px solid var(--fg);
+  padding: 1px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.gbtn:hover:not(:disabled), .gbtn.on { background: var(--fg); color: var(--bg); text-shadow: none; }
+.gbtn:disabled { color: var(--dim); border-color: var(--faint); cursor: not-allowed; }
+body.gui-mode :is(.gbtn, .newsbtn, .npbtn, .keys button) {
+  font: inherit;
+  background: #fff; color: #000;
+  border: 2px solid #000; border-radius: 7px;
+  padding: 1px 12px;
+  text-shadow: none; box-shadow: none;
+}
+body.gui-mode :is(.gbtn, .newsbtn, .npbtn, .keys button):hover:not(:disabled) { background: #fff; outline: 1px dotted #000; outline-offset: -5px; }
+body.gui-mode :is(.gbtn, .newsbtn, .npbtn, .keys button):active:not(:disabled),
+body.gui-mode :is(.gbtn, .npbtn).on,
+body.gui-mode .newsbtn[aria-expanded="true"] { background: #000; color: #fff; outline: none; transform: none; }
+body.gui-mode .gbtn:disabled { color: var(--ega-gray); border-color: var(--ega-dgray); cursor: not-allowed; }
+body.gui-mode .gbtn:focus-visible { outline: 1px dotted #000; outline-offset: -5px; }
+body.gui-mode .gbtn.big { font-size: 1.1em; padding: 4px 18px; }
+body.gui-mode .gbtn.new::after { content: " \2022"; color: #aa0000; }
+.warnbox { color: var(--warn); }
+body.gui-mode .warnbox { color: #aa0000; font-weight: 600; }
+
+/* the Reboot button blinks its border once it's worth pressing */
+body.gui-mode .rbbtn:not(:disabled) { border-width: 3px; animation: winblink 1s steps(1) infinite; }
+@keyframes winblink { 50% { border-color: var(--ega-blue); color: var(--ega-blue); } }
+
+/* ---------- top status bar and news ---------- */
+body.gui-mode .top {
+  background: #fff;
+  border: 2px solid #000;
+  padding: 3px 10px;
+  align-items: center;
+}
+body.gui-mode .logo { display: none !important; }
+body.gui-mode .top::before { content: "INCR.OS 2.0"; font-weight: 600; color: var(--ega-blue); font-size: 1.25em; }
+body.gui-mode .status { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: flex-end; gap: 4px 18px; text-align: right; }
+body.gui-mode .status .big { font-size: 1.3em; font-weight: 600; }
+body.gui-mode .status .rate, body.gui-mode .subcur { color: #000; }
+body.gui-mode .newsbar { background: #fff; border: 2px solid #000; border-top: 0; padding: 2px 6px; }
+body.gui-mode .news { color: #000; }
+body.gui-mode .newspanel { background: #fff; color: #000; border: 2px solid #000; box-shadow: 5px 5px 0 #000; }
+body.gui-mode .np-head { border-bottom: 2px solid #000; }
+body.gui-mode .np-body .dim { color: var(--ega-dgray); }
+
+/* ---------- tiled windows ---------- */
+.gui {
+  flex: 1 1 62%; min-height: 0;
+  display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 6px;
+  margin-top: 6px;
+}
+.win { display: flex; flex-direction: column; min-height: 0; }
+body.gui-mode .win, body.gui-mode .term { background: #fff; border: 2px solid #000; }
+body.gui-mode .win-title {
+  position: relative;
+  display: flex; justify-content: center; align-items: center;
+  min-height: 1.6em; padding: 0 3.4em;
+  background: var(--ega-blue); color: #fff;
+  border-bottom: 2px solid #000;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+/* system menu box (left) and the size arrows (right) */
+body.gui-mode .w-sys {
+  position: absolute; left: 5px; top: 50%; transform: translateY(-50%);
+  width: 1.3em; height: 1em;
+  background: #fff; border: 1px solid #000;
+}
+body.gui-mode .w-sys::after { content: ""; position: absolute; left: 20%; right: 20%; top: 40%; height: 2px; background: #000; }
+body.gui-mode .w-ctl { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); display: flex; gap: 3px; }
+body.gui-mode .w-ctl i {
+  font-style: normal; font-size: 0.6em; line-height: 1;
+  width: 1.9em; height: 1.65em;
+  display: grid; place-items: center;
+  background: #fff; color: #000; border: 1px solid #000;
+}
+body.gui-mode .win-menu {
+  display: flex; gap: 2px; flex-wrap: wrap;
+  padding: 1px 6px;
+  background: #fff;
+  border-bottom: 2px solid #000;
+  flex-shrink: 0;
+}
+.win-menu button {
+  font: inherit; background: none; border: 0; color: #000;
+  padding: 0 8px; cursor: pointer;
+}
+.win-menu button:hover, .win-menu button:focus-visible { background: var(--ega-blue); color: #fff; outline: none; }
+.win-body { flex: 1; min-height: 0; overflow-y: auto; padding: 6px 10px; }
+.win-body p { margin: 0 0 4px; }
+
+/* ---------- the terminal becomes a DOS window ---------- */
+body.gui-mode .term {
+  flex: 0 0 34%;
+  margin-top: 6px; padding: 0 8px 4px;
+  background: #000; color: var(--ega-gray);
+  font-family: "VT323", ui-monospace, Consolas, monospace;
+  font-size: 1.12em;
+}
+body.gui-mode .term-title { display: flex; margin: 0 -8px 4px; font-family: "Pixelify Sans", Tahoma, Arial, sans-serif; font-size: 0.8em; }
+body.gui-mode #log .o, body.gui-mode #log .ok, body.gui-mode #log .cmdline, body.gui-mode .live .hd { color: #fff; }
+body.gui-mode #log .w { color: var(--ega-yellow); }
+body.gui-mode #log .dim, body.gui-mode #log .t { color: #808080; }
+body.gui-mode .live.frozen * { color: #555 !important; }
+body.gui-mode .prompt span { color: var(--ega-gray); }
+body.gui-mode .prompt input { color: #fff; caret-color: #fff; }
+body.gui-mode .prompt input::placeholder { color: #555; }
+body.gui-mode .objective, body.gui-mode .confirm { border-color: var(--ega-yellow); color: var(--ega-yellow); }
+body.gui-mode .keys button { font-family: "Pixelify Sans", Tahoma, Arial, sans-serif; }
+
+/* ---------- Processes window ---------- */
+.prow {
+  display: grid;
+  grid-template-columns: minmax(9em, 1.3fr) 6.5em minmax(7em, 1fr) minmax(8em, 1.2fr);
+  grid-template-areas: "name mult amt rate" "bar bar btns btns";
+  gap: 3px 10px; align-items: center;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--ega-gray);
+}
+.p-name { grid-area: name; }
+.p-mult { grid-area: mult; }
+.p-amt { grid-area: amt; }
+.p-rate { grid-area: rate; text-align: right; }
+.p-bar { grid-area: bar; display: flex; align-items: center; gap: 8px; font-size: 0.9em; }
+.p-btns { grid-area: btns; display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+
+/* progress bars */
+.meter {
+  display: inline-block; flex: 0 0 auto;
+  width: 9em; height: 0.85em;
+  border: 2px solid #000; background: #fff;
+  vertical-align: middle;
+}
+.meter i { display: block; height: 100%; width: 0; background: var(--ega-blue); }
+.row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* ---------- System window ---------- */
+.sec { border: 2px solid #000; border-radius: 6px; margin: 2px 0 10px; padding: 4px 10px 8px; }
+.sec legend { padding: 0 6px; font-weight: 600; color: var(--ega-blue); }
+.btnrow { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0; }
+.ugrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(11em, 1fr)); gap: 6px; margin-top: 6px; }
+.ubtn {
+  font: inherit; text-align: left;
+  background: #fff; color: #000;
+  border: 2px solid #000; border-radius: 4px;
+  padding: 4px 8px; cursor: pointer;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.ubtn .u-name { font-weight: 600; }
+.ubtn .u-desc { color: var(--ega-dgray); font-size: 0.88em; }
+.ubtn .u-cost { font-size: 0.9em; color: var(--ega-blue); }
+.ubtn:hover:not(:disabled) { background: #000; color: #fff; }
+.ubtn:hover:not(:disabled) :is(.u-desc, .u-cost) { color: #fff; }
+.ubtn:disabled { color: var(--ega-gray); border-color: var(--ega-dgray); cursor: not-allowed; }
+.ubtn:disabled .u-cost { color: var(--ega-gray); }
+.ubtn.owned { border-style: dotted; color: #000; }
+.ubtn.owned .u-cost { color: #00aa00; font-weight: 600; }
+
+/* ---------- small screens: one window at a time, switcher at the bottom ---------- */
+.taskbar { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; flex-shrink: 0; }
+.taskbar .gbtn { flex: 1; }
+body.gui-mode .taskbar { order: 99; background: #fff; border: 2px solid #000; padding: 4px; }
+body.gui-mode.narrow .gui { grid-template-columns: minmax(0, 1fr); flex: 1 1 auto; }
+body.gui-mode.narrow[data-tab="proc"] #winSys,
+body.gui-mode.narrow[data-tab="sys"] #winProc { display: none; }
+body.gui-mode.narrow[data-tab="term"] .gui { display: none; }
+body.gui-mode.narrow:not([data-tab="term"]) .term { display: none; }
+body.gui-mode.narrow[data-tab="term"] .term { flex: 1 1 auto; }
+@media (max-width: 760px) {
+  .prow { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "name mult" "amt rate" "bar bar" "btns btns"; }
+  .p-btns { justify-content: stretch; }
+  .p-btns .gbtn { flex: 1; }
+}
+
+/* ---------- achievements window ---------- */
+body.gui-mode .menu { background: #fff; color: #000; border: 2px solid #000; box-shadow: 6px 6px 0 #000; padding: 0 0 8px; }
+body.gui-mode .menu > :not(.menu-head) { margin: 0 10px; }
+body.gui-mode .menu-head { background: var(--ega-blue); color: #fff; border-bottom: 2px solid #000; padding: 3px 8px; font-weight: 600; }
+body.gui-mode .menu-foot { color: var(--ega-dgray); border-top-color: var(--ega-gray); }
+body.gui-mode .am-cell { color: var(--ega-dgray); border: 1px dotted var(--ega-dgray); background: #fff; }
+body.gui-mode .am-cell.got { color: #000; border: 2px solid #000; }
+body.gui-mode .am-cell.sel { background: var(--ega-blue); color: #fff; border-color: var(--ega-blue); }
+body.gui-mode .am-detail { border-top-color: #000; }
+body.gui-mode .am-detail .dim { color: var(--ega-dgray); }
+
+/* ---------- events: a message box ---------- */
+.toast {
+  position: fixed; right: 16px; bottom: 16px; z-index: 30;
+  max-width: min(540px, calc(100vw - 32px));
+  display: flex; gap: 12px; align-items: center;
+  padding: 10px 14px;
+  background: #fff; color: #000;
+  border: 5px double #000;
+  box-shadow: 5px 5px 0 #000;
+  animation: win-open 0.25s ease-out both;
+}
+.toast::before {
+  content: "!"; flex-shrink: 0;
+  width: 1.8em; height: 1.8em; display: grid; place-items: center;
+  border: 2px solid #000; border-radius: 50%; font-weight: 600;
+}
+.confirm {
+  flex-shrink: 0;
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  border: 1px solid var(--warn); color: var(--warn);
+  padding: 2px 8px; margin-top: 4px;
+}
+.confirm span { flex: 1; }
+.confirm .gbtn { border-color: var(--warn); color: var(--warn); }
+
+/* ---------- the transition ---------- */
+@keyframes glitch {
+  0%, 100% { transform: none; filter: none; }
+  20% { transform: translate(-6px, 2px) skewX(3deg); filter: hue-rotate(40deg) brightness(1.4); }
+  40% { transform: translate(5px, -3px); filter: contrast(1.8); }
+  60% { transform: translate(-3px, 3px) skewX(-4deg); filter: hue-rotate(-60deg); }
+  80% { transform: translate(4px, 0); filter: brightness(1.8); }
+}
+.crt.glitch .app { animation: glitch 0.14s steps(2) infinite; }
+@keyframes crt-off {
+  0% { transform: scale(1, 1); filter: brightness(1); opacity: 1; }
+  45% { transform: scale(1, 0.004); filter: brightness(4); }
+  75% { transform: scale(0.003, 0.004); filter: brightness(6); }
+  100% { transform: scale(0, 0); filter: brightness(8); opacity: 0; }
+}
+.crt.crt-off .app { animation: crt-off 0.9s ease-in forwards; transform-origin: center; }
+/* DOS between the two eras: plain gray text, no phosphor */
+.crt.dos { background: #000; text-shadow: none; animation: none; }
+.crt.dos::before, .crt.dos::after { display: none; }
+.crt.dos .boot { color: var(--ega-gray, #aaaaaa); font-family: "VT323", ui-monospace, Consolas, monospace; font-size: 1.15em; }
+
+/* splash screen of the graphical environment */
+.splash {
+  position: fixed; inset: 0; z-index: 60;
+  background: #fff; color: #000;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  font-family: "Pixelify Sans", Tahoma, Arial, sans-serif;
+  text-align: center; padding: 16px;
+  animation: splash-in 0.3s steps(3) both;
+}
+@keyframes splash-in { from { opacity: 0; } to { opacity: 1; } }
+.splash-logo { width: 150px; border: 4px solid #000; margin-bottom: 14px; background: #fff; }
+.sl-title { height: 22px; background: #0000aa; border-bottom: 4px solid #000; }
+.sl-panes { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 6px; height: 92px; }
+.sl-panes i:nth-child(1) { background: #aa0000; }
+.sl-panes i:nth-child(2) { background: #00aa00; }
+.sl-panes i:nth-child(3) { background: #00aaaa; }
+.sl-panes i:nth-child(4) { background: #ffff55; }
+.splash-name { font-size: 3em; font-weight: 600; color: #0000aa; line-height: 1; }
+.splash-sub { font-size: 1.4em; }
+.splash-ver { font-size: 1.1em; }
+.splash-copy { margin-top: 24px; font-size: 0.9em; color: #555; }
+
+@keyframes win-open {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+body.gui-opening .win { animation: win-open 0.35s steps(4) both; }
+body.gui-opening #winSys { animation-delay: 0.25s; }
+body.gui-opening .term { animation: win-open 0.35s steps(4) 0.5s both; }
+@keyframes flash {
+  0% { filter: brightness(2.2); }
+  100% { filter: none; }
+}
+.crt.flash .app { animation: flash 0.45s ease-out; }
+body.gui-mode .crt.flash .app { animation: flash-invert 0.3s steps(2); }
+@keyframes flash-invert { 50% { filter: invert(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .crt.glitch .app, .crt.crt-off .app, .crt.flash .app, .splash,
+  body.gui-opening .win, body.gui-opening .term, .rbbtn:not(:disabled), .toast { animation: none !important; }
 }

@@ -7,10 +7,17 @@
  * To ship a version: add an entry at the TOP of UPDATES and bump VERSION.
  */
 
-const VERSION = 'v0.4';
+const VERSION = 'v0.5';
 
 // newest first
 const UPDATES = [
+  { v: 'v0.5', notes: [
+    'your first REBOOT installs INCR.OS 2.0: a whole graphical environment with windows, menus and buttons.',
+    'the terminal lives on as a DOS window. miss the green screen? /sys gui off',
+    'already rebooted before this update? the game asks before installing it. said no? /upgrade',
+    '/reboot, /format, challenges and /sys reset now ask once: answer /yes or /no within 10s.',
+    'events show up as a pop-up with a button on the desktop.',
+  ] },
   { v: 'v0.4', notes: [
     'the door: numbers now go past 1.79e308. reach it to unlock /patches. new goal: 1e1000.',
     'other machines: /ssh and /scp after your first FORMAT.',

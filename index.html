@@ -6,7 +6,7 @@
   <title>INCR.OS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&family=VT323&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -43,19 +43,33 @@
         </div>
       </div>
 
+      <nav id="taskbar" class="taskbar hidden" aria-label="windows">
+        <button type="button" class="gbtn" data-act="tab:proc" data-tab-btn="proc">Processes</button>
+        <button type="button" class="gbtn" data-act="tab:sys" data-tab-btn="sys">System</button>
+        <button type="button" class="gbtn" id="tabTerm" data-act="tab:term" data-tab-btn="term">Terminal</button>
+      </nav>
+
+      <div id="gui" class="gui hidden">
+        <section class="win" id="winProc" aria-label="Processes">
+          <div class="win-title"><span class="w-sys" aria-hidden="true"></span><span class="w-name">Processes</span><span class="w-ctl" aria-hidden="true"><i>&#9660;</i><i>&#9650;</i></span></div>
+          <div class="win-menu"><button type="button" data-act="maxall">Max All!</button><button type="button" data-act="help">Help!</button></div>
+          <div class="win-body" id="procRows"></div>
+        </section>
+        <section class="win" id="winSys" aria-label="System">
+          <div class="win-title"><span class="w-sys" aria-hidden="true"></span><span class="w-name">System</span><span class="w-ctl" aria-hidden="true"><i>&#9660;</i><i>&#9650;</i></span></div>
+          <div class="win-menu"><button type="button" data-act="ach" id="achMenuItem">Achievements!</button><button type="button" data-act="news">News!</button></div>
+          <div class="win-body" id="sysBody"></div>
+        </section>
+      </div>
+
       <section id="term" class="term">
+        <div class="win-title term-title"><span class="w-sys" aria-hidden="true"></span><span class="w-name" id="termTitle">Terminal</span><span class="w-ctl" aria-hidden="true"><i>&#9660;</i><i>&#9650;</i></span></div>
         <div id="log"></div>
         <div id="objective" class="objective hidden"></div>
-        <div id="achMenu" class="menu hidden" role="dialog" aria-label="Achievements" tabindex="-1">
-          <div class="menu-head"><span id="amHead"></span><button type="button" class="npbtn" id="amClose" aria-label="Close achievements">X</button></div>
-          <div class="menu-tabs">
-            <button type="button" class="npbtn" data-amf="all">ALL</button>
-            <button type="button" class="npbtn" data-amf="unlocked">UNLOCKED</button>
-            <button type="button" class="npbtn" data-amf="locked">LOCKED</button>
-          </div>
-          <div id="amGrid" class="am-grid"></div>
-          <div id="amDetail" class="am-detail"></div>
-          <div class="menu-foot">arrows move · Tab filter · Esc close</div>
+        <div id="confirmBar" class="confirm hidden" role="alert">
+          <span id="confirmText"></span>
+          <button type="button" class="gbtn" data-act="yes">YES</button>
+          <button type="button" class="gbtn" data-act="no">NO</button>
         </div>
         <label class="prompt"><span>root@incr:~$</span><input id="cmd" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" placeholder="type /help" aria-label="command"></label>
         <div id="keys" class="keys hidden" aria-label="touch keys">
@@ -67,11 +81,42 @@
         </div>
       </section>
     </main>
+
+    <div id="achMenu" class="menu hidden" role="dialog" aria-label="Achievements" tabindex="-1">
+      <div class="menu-head"><span id="amHead"></span><button type="button" class="npbtn" id="amClose" aria-label="Close achievements">X</button></div>
+      <div class="menu-tabs">
+        <button type="button" class="npbtn" data-amf="all">ALL</button>
+        <button type="button" class="npbtn" data-amf="unlocked">UNLOCKED</button>
+        <button type="button" class="npbtn" data-amf="locked">LOCKED</button>
+      </div>
+      <div id="amGrid" class="am-grid"></div>
+      <div id="amDetail" class="am-detail"></div>
+      <div class="menu-foot">arrows move · Tab filter · Esc close</div>
+    </div>
+
+    <!-- splash screen of the graphical environment (first reboot) -->
+    <div id="splash" class="splash hidden" aria-hidden="true">
+      <div class="splash-logo">
+        <div class="sl-title"></div>
+        <div class="sl-panes"><i></i><i></i><i></i><i></i></div>
+      </div>
+      <div class="splash-name">INCR.OS</div>
+      <div class="splash-sub">Graphical Environment</div>
+      <div class="splash-ver">Version 2.0</div>
+      <div class="splash-copy">Copyright (c) Incremental Systems Corp., 1987.</div>
+    </div>
+
+    <!-- event message box (graphical mode) -->
+    <div id="toast" class="toast hidden" role="status">
+      <span id="toastText"></span>
+      <button type="button" class="gbtn" id="toastBtn" data-act="event"></button>
+    </div>
   </div>
   <script src="big.js"></script>
   <script src="skins.js"></script>
   <script src="news.js"></script>
   <script src="filesystem.js"></script>
+  <script src="gui.js"></script>
   <script src="game.js"></script>
 </body>
 </html>
